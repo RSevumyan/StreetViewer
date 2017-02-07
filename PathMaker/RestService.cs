@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using System.Runtime.Serialization.Json;
+using System.IO;
 
 namespace PathMaker
 {
@@ -27,7 +28,16 @@ namespace PathMaker
             HttpWebResponse response = reques.GetResponse() as HttpWebResponse;
             DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(GeocodeJsonReply));
             object objResponse = jsonSerializer.ReadObject(response.GetResponseStream());
+            
             return objResponse as GeocodeJsonReply;
+        }
+
+        public void WriteToFile(string url){
+            HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(url);
+            HttpWebResponse response = reques.GetResponse() as HttpWebResponse;
+            FileStream fs = File.OpenWrite("a.txt");
+            response.GetResponseStream().CopyTo(fs);
+            fs.Close();
         }
     }
 }
