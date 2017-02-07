@@ -1,0 +1,7 @@
+C:\Users\Андрей\Desktop\ДмитрийЗ\Filters\PathMaker\PathMaker\obj\x86\Debug\PathMaker.MainForm.resources
+C:\Users\Андрей\Desktop\ДмитрийЗ\Filters\PathMaker\PathMaker\obj\x86\Debug\PathMaker.Properties.Resources.resources
+C:\Users\Андрей\Desktop\ДмитрийЗ\Filters\PathMaker\PathMaker\obj\x86\Debug\PathMaker.csproj.GenerateResource.Cache
+C:\Users\Андрей\Desktop\ДмитрийЗ\Filters\PathMaker\PathMaker\bin\Debug\PathMaker.exe
+C:\Users\Андрей\Desktop\ДмитрийЗ\Filters\PathMaker\PathMaker\bin\Debug\PathMaker.pdb
+C:\Users\Андрей\Desktop\ДмитрийЗ\Filters\PathMaker\PathMaker\obj\x86\Debug\PathMaker.exe
+C:\Users\Андрей\Desktop\ДмитрийЗ\Filters\PathMaker\PathMaker\obj\x86\Debug\PathMaker.pdb
