@@ -7,24 +7,24 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using StreetViewer.Service;
-using StreetViewer.JsonObjects;
+using StreetViewer.JsonObjects.Geocoding;
+using StreetViewer.Core;
 
 namespace StreetViewer.Interface
 {
     public partial class MainForm : Form
     {
+        private Controller controller;
         public MainForm()
         {
             InitializeComponent();
+            controller = new Controller();
         }
-
-        RestService service = new RestService();
 
         private void requestButton_Click(object sender, EventArgs e)
-        {
-            GeocodeJsonReply reply = service.GetGeocoding(streetTextBox.Text);
-            resultLabel.Text = reply.Results[0].Geometry.Location.Lat +";\t"+ reply.Results[0].Geometry.Location.Lng;
+        {  
+            Location location = controller.getGeocoding(streetTextBox.Text);
+            resultLabel.Text = location.Lat + ";\t" + location.Lng;
         }
-
     }
 }

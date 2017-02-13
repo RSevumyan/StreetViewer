@@ -5,7 +5,7 @@ using System.Text;
 using System.Net;
 using System.Runtime.Serialization.Json;
 using System.IO;
-using StreetViewer.JsonObjects;
+using StreetViewer.JsonObjects.Geocoding;
 
 namespace StreetViewer.Service
 {
@@ -38,6 +38,13 @@ namespace StreetViewer.Service
             FileStream fs = File.OpenWrite("a.txt");
             response.GetResponseStream().CopyTo(fs);
             fs.Close();
+        }
+
+        public string getDirection(string startStreet, string endStreet)
+        {
+            HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(String.Format(DESTINATION_URL_FORMAT, startStreet, endStreet, GOOGLE_API_KEY));
+            HttpWebResponse response = reques.GetResponse() as HttpWebResponse;
+          //  return response.GetResponseStream().ToString;
         }
     }
 }
