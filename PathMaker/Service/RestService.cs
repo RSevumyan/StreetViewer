@@ -6,6 +6,7 @@ using System.Net;
 using System.Runtime.Serialization.Json;
 using System.IO;
 using StreetViewer.JsonObjects.Geocoding;
+using StreetViewer.JsonObjects.Direction;
 
 namespace StreetViewer.Service
 {
@@ -22,7 +23,7 @@ namespace StreetViewer.Service
         {
 
         }
-        public GeocodeJsonReply GetGeocoding(String place)
+        public GeocodeJsonReply getGeocoding(String place)
         {
             HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(String.Format(GEOCODING_URL_FORMAT,place, GOOGLE_API_KEY));
             HttpWebResponse response = reques.GetResponse() as HttpWebResponse;
@@ -40,11 +41,14 @@ namespace StreetViewer.Service
             fs.Close();
         }
 
-        public string getDirection(string startStreet, string endStreet)
+        public DirectionsStatusJson getDirection(string startStreet, string endStreet)
         {
             HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(String.Format(DESTINATION_URL_FORMAT, startStreet, endStreet, GOOGLE_API_KEY));
             HttpWebResponse response = reques.GetResponse() as HttpWebResponse;
-          //  return response.GetResponseStream().ToString;
+            DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(DirectionsStatusJson));
+            object objResponse = jsonSerializer.ReadObject(response.GetResponseStream());
+            return objResponse as DirectionsStatusJson;
+
         }
     }
 }

@@ -48,10 +48,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\Controller.cs" />
+    <Compile Include="JsonObjects\Common\BoundsJson.cs" />
+    <Compile Include="JsonObjects\Common\TextValueJson.cs" />
+    <Compile Include="JsonObjects\Direction\DirectionsGeocodedWayPointJson.cs" />
+    <Compile Include="JsonObjects\Direction\DirectionsLegJson.cs" />
+    <Compile Include="JsonObjects\Direction\DirectionsPolylineJson.cs" />
+    <Compile Include="JsonObjects\Direction\DirectionsRouteJson.cs" />
+    <Compile Include="JsonObjects\Direction\DirectionsStatusJson.cs" />
+    <Compile Include="JsonObjects\Direction\DirectionsStepJson.cs" />
     <Compile Include="JsonObjects\Geocoding\GeocodeJsonReply.cs" />
     <Compile Include="JsonObjects\Geocoding\Geometry.cs" />
     <Compile Include="JsonObjects\Geocoding\JsonAddress.cs" />
-    <Compile Include="JsonObjects\Geocoding\Location.cs" />
+    <Compile Include="JsonObjects\Common\Location.cs" />
     <Compile Include="Interface\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -89,7 +97,6 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="JsonObjects\Direction\" />
     <Folder Include="JsonObjects\StreetView\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

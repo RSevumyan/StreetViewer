@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
 
-namespace StreetViewer.JsonObjects.Geocoding
+namespace StreetViewer.JsonObjects.Common
 {
     [DataContract]
     public class Location

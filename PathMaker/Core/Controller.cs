@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using StreetViewer.Service;
+using StreetViewer.JsonObjects.Common;
 using StreetViewer.JsonObjects.Geocoding;
+using StreetViewer.JsonObjects.Direction;
 
 namespace StreetViewer.Core
 {
@@ -20,13 +22,15 @@ namespace StreetViewer.Core
 
         public Location getGeocoding(string streetName)
         {
-            GeocodeJsonReply reply = restService.GetGeocoding(streetName);
+            //ToDo Сделать получение массива байт или строки в restService.getGeocoding();
+            GeocodeJsonReply reply = restService.getGeocoding(streetName);
             return jsonService.parseGeocode(reply);
         }
 
-        public List<Location> getDirection(string startStreet, string endStreet)
+        public string getDirection(string startStreet, string endStreet)
         {
-            return null;
+            DirectionsStatusJson route = restService.getDirection(startStreet, endStreet);
+            return jsonService.parseDirection(route);
         }
     }
 }

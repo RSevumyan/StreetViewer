@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using StreetViewer.Service;
-using StreetViewer.JsonObjects.Geocoding;
+using StreetViewer.JsonObjects.Common;
 using StreetViewer.Core;
 
 namespace StreetViewer.Interface
@@ -25,6 +25,11 @@ namespace StreetViewer.Interface
         {  
             Location location = controller.getGeocoding(streetTextBox.Text);
             resultLabel.Text = location.Lat + ";\t" + location.Lng;
+        }
+
+        private void requestButton2_Click(object sender, EventArgs e)
+        {
+           resultLabel.Text =  controller.getDirection(startStreet.Text, endStreet.Text);
         }
     }
 }

@@ -89,6 +89,7 @@
             this.requestButton2.TabIndex = 5;
             this.requestButton2.Text = "Найти";
             this.requestButton2.UseVisualStyleBackColor = true;
+            this.requestButton2.Click += new System.EventHandler(this.requestButton2_Click);
             // 
             // GeocodingLabel
             // 
