@@ -9,6 +9,13 @@ namespace StreetViewer.JsonObjects.Common
     [DataContract]
     public class Location
     {
+
+        public Location(double lat, double lng)
+        {
+            this.Lat = lat;
+            this.Lng = lng;
+        }
+
         private double lat;
         [DataMember(Name = "lat")]
         public double Lat

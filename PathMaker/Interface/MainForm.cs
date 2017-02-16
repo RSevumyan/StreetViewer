@@ -22,14 +22,16 @@ namespace StreetViewer.Interface
         }
 
         private void requestButton_Click(object sender, EventArgs e)
-        {  
+        {
             Location location = controller.getGeocoding(streetTextBox.Text);
             resultLabel.Text = location.Lat + ";\t" + location.Lng;
         }
 
         private void requestButton2_Click(object sender, EventArgs e)
         {
-           resultLabel.Text =  controller.getDirection(startStreet.Text, endStreet.Text);
+            resultLabel.Text = "Загружается...";
+            controller.getDirection(startStreet.Text, endStreet.Text);
+            resultLabel.Text = "Загрузка завершена";
         }
     }
 }

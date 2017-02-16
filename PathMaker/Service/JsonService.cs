@@ -17,7 +17,14 @@ namespace StreetViewer.Service
 
         public string parseDirection(DirectionsStatusJson json)
         {
-            return json.Routes[0].OverviewPolyline.Points;
+            if (!"NOT_FOUND".Equals(json.Status))
+            {
+                return json.Routes[0].OverviewPolyline.Points;
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

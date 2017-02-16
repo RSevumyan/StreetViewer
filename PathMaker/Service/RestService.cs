@@ -25,20 +25,20 @@ namespace StreetViewer.Service
         }
         public GeocodeJsonReply getGeocoding(String place)
         {
-            HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(String.Format(GEOCODING_URL_FORMAT,place, GOOGLE_API_KEY));
+            HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(String.Format(GEOCODING_URL_FORMAT, place, GOOGLE_API_KEY));
             HttpWebResponse response = reques.GetResponse() as HttpWebResponse;
             DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(GeocodeJsonReply));
             object objResponse = jsonSerializer.ReadObject(response.GetResponseStream());
-            
+
             return objResponse as GeocodeJsonReply;
         }
 
-        public void WriteToFile(string url){
+        public Stream getStreetViewStream(string lat, string lng)
+        {
+            string url = String.Format(STREET_VIEW_URL_FORMAT, lat, lng, GOOGLE_API_KEY);
             HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(url);
             HttpWebResponse response = reques.GetResponse() as HttpWebResponse;
-            FileStream fs = File.OpenWrite("a.txt");
-            response.GetResponseStream().CopyTo(fs);
-            fs.Close();
+            return response.GetResponseStream();
         }
 
         public DirectionsStatusJson getDirection(string startStreet, string endStreet)
