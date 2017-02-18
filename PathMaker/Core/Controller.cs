@@ -36,6 +36,11 @@ namespace StreetViewer.Core
             DirectionsStatusJson route = restService.getDirection(startStreet, endStreet);
 
             string polyLine = jsonService.parseDirection(route);
+            downloadStreetViewsOfDirection(polyLine);
+        }
+
+        private void downloadStreetViewsOfDirection(string polyLine)
+        {
             if (polyLine != null)
             {
 
@@ -44,11 +49,23 @@ namespace StreetViewer.Core
                     Directory.CreateDirectory(RESULT_DIRECTORY);
                 }
                 IList<Location> points = decodePolyline(polyLine);
-                StreamWriter streamWriter = new StreamWriter(RESULT_DIRECTORY+"\\coordinates.txt");
+                StreamWriter streamWriter = new StreamWriter(RESULT_DIRECTORY + "\\coordinates.txt");
+
                 for (int i = 0; i < points.Count; i++)
                 {
-                    Stream viewStream = restService.getStreetViewStream(points[i].Lat.ToString(), points[i].Lng.ToString());
-                    FileStream fileStream = File.OpenWrite(RESULT_DIRECTORY+"\\"+ i + ".jpeg");
+                    double angle = 0;
+
+                    if (i < points.Count - 1)
+                    {
+                        angle = calculateAngle(points[i].Lat - points[i + 1].Lat, points[i].Lng - points[i + 1].Lng);
+                    }
+                    else
+                    {
+                        angle = calculateAngle(points[i - 1].Lat - points[i].Lat, points[i - 1].Lng - points[i].Lng);
+                    }
+
+                    Stream viewStream = restService.getStreetViewStream(points[i].Lat.ToString(), points[i].Lng.ToString(), angle.ToString());
+                    FileStream fileStream = File.OpenWrite(RESULT_DIRECTORY + "\\" + i + ".jpeg");
                     viewStream.CopyTo(fileStream);
                     fileStream.Close();
                     streamWriter.WriteLine(points[i].Lat + ";\t" + points[i].Lng + "\r\n");
@@ -110,6 +127,31 @@ namespace StreetViewer.Core
 
             }
             return locationList;
+        }
+
+        private double calculateAngle(double height, double width)
+        {
+            height += height == 0 ? 0.00001 : 0;
+            double angle = Math.Atan(width / height) * (180 / Math.PI);
+
+            if (angle < 0)
+            {
+                angle += 90;
+            }
+
+            if (height >= 0 && width < 0)
+            {
+                angle += 90;
+            }
+            else if (height > 0 && width >= 0)
+            {
+                angle += 180;
+            }
+            else if (height <= 0 && width > 0)
+            {
+                angle += 270;
+            }
+            return angle;
         }
     }
 }
