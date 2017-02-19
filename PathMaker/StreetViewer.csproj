@@ -33,6 +33,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Icons-Land-Vista-Map-Markers-Map-Marker-Marker-Inside-Chartreuse.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>StreetViewer.Core.Program</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -68,7 +74,6 @@
     </Compile>
     <Compile Include="Core\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Service\JsonService.cs" />
     <Compile Include="Service\RestService.cs" />
     <EmbeddedResource Include="Interface\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
@@ -98,6 +103,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="JsonObjects\StreetView\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Icons-Land-Vista-Map-Markers-Map-Marker-Marker-Inside-Chartreuse.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -14,29 +14,41 @@ namespace StreetViewer.Core
     class Controller
     {
         private const string RESULT_DIRECTORY = "results";
+        private const int ORDER_PARAM = 50;
 
         private RestService restService;
-        private JsonService jsonService;
 
         public Controller()
         {
             restService = new RestService();
-            jsonService = new JsonService();
         }
 
-        public Location getGeocoding(string streetName)
+        public string getGeocoding(string streetName)
         {
             //ToDo Сделать получение массива байт или строки в restService.getGeocoding();
             GeocodeJsonReply reply = restService.getGeocoding(streetName);
-            return jsonService.parseGeocode(reply);
+            if("ZERO_RESULTS".Equals(reply.Status)){
+                return null;
+            }
+            else{
+                
+            return reply.Results[0].Geometry.Location.Lat+";\t"+reply.Results[0].Geometry.Location.Lng; 
+            }
         }
 
-        public void getDirection(string startStreet, string endStreet)
+        public bool getDirection(string startStreet, string endStreet)
         {
-            DirectionsStatusJson route = restService.getDirection(startStreet, endStreet);
+            DirectionsStatusJson json = restService.getDirection(startStreet, endStreet);
 
-            string polyLine = jsonService.parseDirection(route);
-            downloadStreetViewsOfDirection(polyLine);
+            if ("NOT_FOUND".Equals(json.Status))
+            {
+                return false;
+            }
+            else
+            {
+                downloadStreetViewsOfDirection(json.Routes[0].OverviewPolyline.Points);
+                return true;
+            }
         }
 
         private void downloadStreetViewsOfDirection(string polyLine)
@@ -48,6 +60,7 @@ namespace StreetViewer.Core
                 {
                     Directory.CreateDirectory(RESULT_DIRECTORY);
                 }
+
                 IList<Location> points = decodePolyline(polyLine);
                 StreamWriter streamWriter = new StreamWriter(RESULT_DIRECTORY + "\\coordinates.txt");
 
@@ -92,7 +105,6 @@ namespace StreetViewer.Core
 
             while (index < polylineChars.Length)
             {
-                // calculate next latitude
                 sum = 0;
                 shifter = 0;
                 do
@@ -107,7 +119,6 @@ namespace StreetViewer.Core
 
                 currentLat += (sum & 1) == 1 ? ~(sum >> 1) : (sum >> 1);
 
-                //calculate next longitude
                 sum = 0;
                 shifter = 0;
                 do
@@ -123,6 +134,28 @@ namespace StreetViewer.Core
                 currentLng += (sum & 1) == 1 ? ~(sum >> 1) : (sum >> 1);
                 double lat = Convert.ToDouble(currentLat) / 1E5;
                 double lng = Convert.ToDouble(currentLng) / 1E5;
+
+                if (locationList.Any())
+                {
+                    double height = (lat - locationList[locationList.Count - 1].Lat) * 100000;
+                    double width = (lng - locationList[locationList.Count - 1].Lng) * 100000;
+                    double hypotenuse = Math.Sqrt((height * height) + (width * width));
+
+
+                    if (hypotenuse > ORDER_PARAM)
+                    {
+                        int order = (int)hypotenuse / ORDER_PARAM;
+                        double latStep = height / (order + 1) / 100000;
+                        double lngStep = width / (order + 1) / 100000;
+
+                        for (int i = 0; i < order; i++)
+                        {
+                            double newLat = locationList[locationList.Count - 1].Lat + latStep;
+                            double newLng = locationList[locationList.Count - 1].Lng + lngStep;
+                            locationList.Add(new Location(newLat, newLng));
+                        }
+                    }
+                }
                 locationList.Add(new Location(lat, lng));
 
             }

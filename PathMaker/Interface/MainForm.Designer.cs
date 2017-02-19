@@ -29,6 +29,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.streetTextBox = new System.Windows.Forms.TextBox();
             this.requestButton = new System.Windows.Forms.Button();
             this.resultLabel = new System.Windows.Forms.Label();
@@ -122,6 +123,7 @@
             this.Controls.Add(this.resultLabel);
             this.Controls.Add(this.requestButton);
             this.Controls.Add(this.streetTextBox);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "MainForm";
             this.Text = "Form1";

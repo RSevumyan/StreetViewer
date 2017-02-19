@@ -7,14 +7,15 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using StreetViewer.Service;
-using StreetViewer.JsonObjects.Common;
 using StreetViewer.Core;
 
 namespace StreetViewer.Interface
 {
     public partial class MainForm : Form
     {
+        private const string ERROR_MESSAGE = "Введены некорректные\r\n данные";
         private Controller controller;
+
         public MainForm()
         {
             InitializeComponent();
@@ -23,15 +24,43 @@ namespace StreetViewer.Interface
 
         private void requestButton_Click(object sender, EventArgs e)
         {
-            Location location = controller.getGeocoding(streetTextBox.Text);
-            resultLabel.Text = location.Lat + ";\t" + location.Lng;
+            if (string.IsNullOrEmpty(streetTextBox.Text))
+            {
+                resultLabel.Text = ERROR_MESSAGE;
+            }
+            else
+            {
+                string result = controller.getGeocoding(streetTextBox.Text);
+                if (string.IsNullOrEmpty(result))
+                {
+                    resultLabel.Text = ERROR_MESSAGE;
+                }
+                else
+                {
+                    resultLabel.Text = result;
+                }
+            }
         }
 
         private void requestButton2_Click(object sender, EventArgs e)
         {
-            resultLabel.Text = "Загружается...";
-            controller.getDirection(startStreet.Text, endStreet.Text);
-            resultLabel.Text = "Загрузка завершена";
+            if (string.IsNullOrEmpty(startStreet.Text) || string.IsNullOrEmpty(endStreet.Text))
+            {
+                resultLabel.Text = ERROR_MESSAGE;
+            }
+            else
+            {
+                resultLabel.Text = "Загружается...";
+                bool result = controller.getDirection(startStreet.Text, endStreet.Text);
+                if (result)
+                {
+                    resultLabel.Text = "Загрузка завершена успешно";
+                }
+                else
+                {
+                    resultLabel.Text = ERROR_MESSAGE;
+                }
+            }
         }
     }
 }
