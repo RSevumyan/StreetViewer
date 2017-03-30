@@ -38,6 +38,7 @@
             this.requestButton2 = new System.Windows.Forms.Button();
             this.GeocodingLabel = new System.Windows.Forms.Label();
             this.DirecrionLabel = new System.Windows.Forms.Label();
+            this.gMap = new GMap.NET.WindowsForms.GMapControl();
             this.SuspendLayout();
             // 
             // streetTextBox
@@ -70,21 +71,21 @@
             // 
             // startStreet
             // 
-            this.startStreet.Location = new System.Drawing.Point(28, 159);
+            this.startStreet.Location = new System.Drawing.Point(214, 51);
             this.startStreet.Name = "startStreet";
             this.startStreet.Size = new System.Drawing.Size(100, 20);
             this.startStreet.TabIndex = 3;
             // 
             // endStreet
             // 
-            this.endStreet.Location = new System.Drawing.Point(157, 159);
+            this.endStreet.Location = new System.Drawing.Point(333, 51);
             this.endStreet.Name = "endStreet";
             this.endStreet.Size = new System.Drawing.Size(100, 20);
             this.endStreet.TabIndex = 4;
             // 
             // requestButton2
             // 
-            this.requestButton2.Location = new System.Drawing.Point(28, 198);
+            this.requestButton2.Location = new System.Drawing.Point(273, 97);
             this.requestButton2.Name = "requestButton2";
             this.requestButton2.Size = new System.Drawing.Size(100, 23);
             this.requestButton2.TabIndex = 5;
@@ -104,17 +105,44 @@
             // DirecrionLabel
             // 
             this.DirecrionLabel.AutoSize = true;
-            this.DirecrionLabel.Location = new System.Drawing.Point(28, 140);
+            this.DirecrionLabel.Location = new System.Drawing.Point(159, 51);
             this.DirecrionLabel.Name = "DirecrionLabel";
             this.DirecrionLabel.Size = new System.Drawing.Size(49, 13);
             this.DirecrionLabel.TabIndex = 7;
             this.DirecrionLabel.Text = "Direction";
             // 
+            // gMap
+            // 
+            this.gMap.Bearing = 0F;
+            this.gMap.CanDragMap = false;
+            this.gMap.EmptyTileColor = System.Drawing.Color.Navy;
+            this.gMap.GrayScaleMode = false;
+            this.gMap.HelperLineOption = GMap.NET.WindowsForms.HelperLineOptions.DontShow;
+            this.gMap.LevelsKeepInMemmory = 5;
+            this.gMap.Location = new System.Drawing.Point(12, 150);
+            this.gMap.MarkersEnabled = true;
+            this.gMap.MaxZoom = 20;
+            this.gMap.MinZoom = 2;
+            this.gMap.MouseWheelZoomType = GMap.NET.MouseWheelZoomType.MousePositionAndCenter;
+            this.gMap.Name = "gMap";
+            this.gMap.NegativeMode = false;
+            this.gMap.PolygonsEnabled = true;
+            this.gMap.RetryLoadTile = 0;
+            this.gMap.RoutesEnabled = true;
+            this.gMap.ScaleMode = GMap.NET.WindowsForms.ScaleModes.Integer;
+            this.gMap.SelectedAreaFillColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(65)))), ((int)(((byte)(105)))), ((int)(((byte)(225)))));
+            this.gMap.ShowTileGridLines = false;
+            this.gMap.Size = new System.Drawing.Size(533, 336);
+            this.gMap.TabIndex = 8;
+            this.gMap.Zoom = 9D;
+            this.gMap.Load += new System.EventHandler(this.gMap_Load);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(281, 241);
+            this.ClientSize = new System.Drawing.Size(557, 513);
+            this.Controls.Add(this.gMap);
             this.Controls.Add(this.DirecrionLabel);
             this.Controls.Add(this.GeocodingLabel);
             this.Controls.Add(this.requestButton2);
@@ -142,6 +170,7 @@
         private System.Windows.Forms.Button requestButton2;
         private System.Windows.Forms.Label GeocodingLabel;
         private System.Windows.Forms.Label DirecrionLabel;
+        private GMap.NET.WindowsForms.GMapControl gMap;
     }
 }
 

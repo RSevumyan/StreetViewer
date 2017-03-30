@@ -62,5 +62,12 @@ namespace StreetViewer.Interface
                 }
             }
         }
+
+        private void gMap_Load(object sender, EventArgs e)
+        {
+            gMap.MapProvider = GMap.NET.MapProviders.BingMapProvider.Instance;
+            GMap.NET.GMaps.Instance.Mode = GMap.NET.AccessMode.ServerOnly;
+            gMap.SetPositionByKeywords("Moscow, Russia");
+        }
     }
 }
