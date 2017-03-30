@@ -23,18 +23,32 @@ namespace StreetViewer.Core
             restService = new RestService();
         }
 
-        public string getGeocoding(string streetName)
+        public double[] getGeocoding(string streetName)
         {
-            //ToDo Сделать получение массива байт или строки в restService.getGeocoding();
+            double[] res = new double[2];
             GeocodeJsonReply reply = restService.getGeocoding(streetName);
             if("ZERO_RESULTS".Equals(reply.Status)){
                 return null;
             }
             else{
-                
-            return reply.Results[0].Geometry.Location.Lat+";\t"+reply.Results[0].Geometry.Location.Lng; 
+                res[0] = reply.Results[0].Geometry.Location.Lat;
+                res[1] = reply.Results[0].Geometry.Location.Lng;
+                return res;
             }
         }
+
+        public string getGeocodingAsString(string streetName)
+        {
+            double[] geoCode = getGeocoding(streetName);
+            if (geoCode == null)
+            {
+                return null;
+            }
+            else
+            {
+                return geoCode[0] + ",\t" + geoCode[1];
+            }
+         }
 
         public bool getDirection(string startStreet, string endStreet)
         {

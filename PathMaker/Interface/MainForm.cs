@@ -15,6 +15,7 @@ namespace StreetViewer.Interface
     {
         private const string ERROR_MESSAGE = "Введены некорректные данные";
 
+        private double[] geoCode;
         private Controller controller;
 
         public MainForm()
@@ -27,9 +28,22 @@ namespace StreetViewer.Interface
 
         private void directionRequestButton_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(startStreet.Text) || string.IsNullOrEmpty(endStreet.Text))
+            if (string.IsNullOrEmpty(startStreet.Text) && string.IsNullOrEmpty(endStreet.Text))
             {
                 resultLabel.Text = ERROR_MESSAGE;
+            }
+            else if (!string.IsNullOrEmpty(startStreet.Text) && string.IsNullOrEmpty(endStreet.Text))
+            {
+                geoCode = controller.getGeocoding(startStreet.Text);
+                if (geoCode != null)
+                {
+                    gMap.Position = new GMap.NET.PointLatLng(geoCode[0], geoCode[1]);
+                    gMap.Zoom = 15;
+                }
+            }
+            else if (string.IsNullOrEmpty(startStreet.Text) && !string.IsNullOrEmpty(endStreet.Text))
+            {
+                geoCode = controller.getGeocoding(endStreet.Text);
             }
             else
             {

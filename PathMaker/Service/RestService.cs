@@ -23,6 +23,7 @@ namespace StreetViewer.Service
         {
 
         }
+
         public GeocodeJsonReply getGeocoding(String place)
         {
             HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(String.Format(GEOCODING_URL_FORMAT, place, GOOGLE_API_KEY));

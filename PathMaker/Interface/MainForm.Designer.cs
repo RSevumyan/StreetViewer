@@ -91,7 +91,10 @@
             // gMap
             // 
             this.gMap.Bearing = 0F;
-            this.gMap.CanDragMap = false;
+            this.gMap.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.gMap.CanDragMap = true;
+            this.gMap.Cursor = System.Windows.Forms.Cursors.Cross;
+            this.gMap.DragButton = System.Windows.Forms.MouseButtons.Left;
             this.gMap.EmptyTileColor = System.Drawing.Color.Navy;
             this.gMap.GrayScaleMode = false;
             this.gMap.HelperLineOption = GMap.NET.WindowsForms.HelperLineOptions.DontShow;
