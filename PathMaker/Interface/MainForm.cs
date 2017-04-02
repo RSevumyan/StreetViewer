@@ -69,6 +69,14 @@ namespace StreetViewer.Interface
             gMap.DragButton = System.Windows.Forms.MouseButtons.Left;
 
             markers = new GMapOverlay("markers");
+            startStreetMarker = new GMarkerGoogle(new PointLatLng(0,0), GMarkerGoogleType.blue);
+            startStreetMarker.IsVisible = false;
+            startStreetMarker.ToolTipText = "Начальная точка";
+            markers.Markers.Add(startStreetMarker);
+            endStreetMarker = new GMarkerGoogle(new PointLatLng(0,0), GMarkerGoogleType.red);
+            endStreetMarker.IsVisible = false;
+            endStreetMarker.ToolTipText = "Конечная точка";
+            markers.Markers.Add(endStreetMarker);
         }
 
         private void setToolTipProperties(System.Windows.Forms.ToolTip toolTip)
@@ -100,20 +108,20 @@ namespace StreetViewer.Interface
                 double[] geoCode = controller.getGeocoding(startStreet.Text);
                 if (geoCode != null)
                 {
-                    PointLatLng point = new PointLatLng(geoCode[0], geoCode[1]);
-                    gMap.Position = point;
+                    PointLatLng position = new PointLatLng(geoCode[0], geoCode[1]);
 
-                    startStreetMarker = new GMarkerGoogle(point, GMarkerGoogleType.blue);
-                    markers.Markers.Add(startStreetMarker);
+                    startStreetMarker.Position = position;
+                    startStreetMarker.IsVisible = true;
                     gMap.Overlays.Add(markers);
 
-                    if (endStreetMarker == null)
+                    if (endStreetMarker.Position.Lat == 0 && endStreetMarker.Position.Lng == 0)
                     {
+                        gMap.Position = position;
                         gMap.Zoom = 15;
                     }
                     else
                     {
-                        calculateZoom(startStreetMarker.Position, endStreetMarker.Position);
+                        calculateZoomAndPosition(startStreetMarker.Position, endStreetMarker.Position);
                     }
                 }
                 else
@@ -145,20 +153,19 @@ namespace StreetViewer.Interface
                 double[] geoCode = controller.getGeocoding(endStreet.Text);
                 if (geoCode != null)
                 {
-                    PointLatLng point = new PointLatLng(geoCode[0], geoCode[1]);
-                    gMap.Position = point;
+                    PointLatLng position = new PointLatLng(geoCode[0], geoCode[1]);
+                    endStreetMarker.Position = position;
+                    endStreetMarker.IsVisible = true;
 
-                    endStreetMarker = new GMarkerGoogle(point, GMarkerGoogleType.red);
-                    markers.Markers.Add(endStreetMarker);
-                    gMap.Overlays.Add(markers);
-
-                    if (endStreetMarker == null)
+                    if (startStreetMarker.Position.Lat == 0 && startStreetMarker.Position.Lng == 0)
                     {
+                        gMap.Position = position;
                         gMap.Zoom = 15;
+
                     }
                     else
                     {
-                        calculateZoom(startStreetMarker.Position, endStreetMarker.Position);
+                        calculateZoomAndPosition(startStreetMarker.Position, endStreetMarker.Position);
                     }
                 }
                 else
@@ -169,12 +176,12 @@ namespace StreetViewer.Interface
             }
         }
 
-        private void calculateZoom(PointLatLng start, PointLatLng end)
+        private void calculateZoomAndPosition(PointLatLng start, PointLatLng end)
         {
             double height = start.Lat - end.Lat;
             double width = start.Lng - end.Lng;
             double distance = Math.Sqrt(Math.Pow(height, 2) + Math.Pow(width, 2));
-            gMap.Zoom = 20 - Math.Round(Math.Log(distance * 60 / 0.06, 2));
+            gMap.Zoom = 19 - Math.Round(Math.Log(distance * 60 / 0.06, 2));
             gMap.Position = new PointLatLng(start.Lat - height / 2, start.Lng - width / 2);
         }
     }
