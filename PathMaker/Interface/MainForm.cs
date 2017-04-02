@@ -102,11 +102,19 @@ namespace StreetViewer.Interface
                 {
                     PointLatLng point = new PointLatLng(geoCode[0], geoCode[1]);
                     gMap.Position = point;
-                    gMap.Zoom = 15;
 
                     startStreetMarker = new GMarkerGoogle(point, GMarkerGoogleType.blue);
                     markers.Markers.Add(startStreetMarker);
                     gMap.Overlays.Add(markers);
+
+                    if (endStreetMarker == null)
+                    {
+                        gMap.Zoom = 15;
+                    }
+                    else
+                    {
+                        calculateZoom(startStreetMarker.Position, endStreetMarker.Position);
+                    }
                 }
                 else
                 {
@@ -132,22 +140,26 @@ namespace StreetViewer.Interface
 
         private void endStreet_KeyUp(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)
+            if (e.KeyCode == Keys.Enter && !string.IsNullOrEmpty(endStreet.Text))
             {
-                if (!string.IsNullOrEmpty(endStreet.Text))
+                double[] geoCode = controller.getGeocoding(endStreet.Text);
+                if (geoCode != null)
                 {
-                    double[] geoCode = controller.getGeocoding(endStreet.Text);
-                    if (geoCode != null)
+                    PointLatLng point = new PointLatLng(geoCode[0], geoCode[1]);
+                    gMap.Position = point;
+
+                    endStreetMarker = new GMarkerGoogle(point, GMarkerGoogleType.red);
+                    markers.Markers.Add(endStreetMarker);
+                    gMap.Overlays.Add(markers);
+
+                    if (endStreetMarker == null)
                     {
-                        PointLatLng point = new PointLatLng(geoCode[0], geoCode[1]);
-                        gMap.Position = point;
                         gMap.Zoom = 15;
-
-                        endStreetMarker = new GMarkerGoogle(point, GMarkerGoogleType.red);
-                        markers.Markers.Add(endStreetMarker);
-                        gMap.Overlays.Add(markers);
                     }
-
+                    else
+                    {
+                        calculateZoom(startStreetMarker.Position, endStreetMarker.Position);
+                    }
                 }
                 else
                 {
@@ -155,6 +167,15 @@ namespace StreetViewer.Interface
                 }
                 e.Handled = true;
             }
+        }
+
+        private void calculateZoom(PointLatLng start, PointLatLng end)
+        {
+            double height = start.Lat - end.Lat;
+            double width = start.Lng - end.Lng;
+            double distance = Math.Sqrt(Math.Pow(height, 2) + Math.Pow(width, 2));
+            gMap.Zoom = 20 - Math.Round(Math.Log(distance * 60 / 0.06, 2));
+            gMap.Position = new PointLatLng(start.Lat - height / 2, start.Lng - width / 2);
         }
     }
 }
