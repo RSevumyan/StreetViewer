@@ -52,26 +52,28 @@
             // 
             // startStreet
             // 
-            this.startStreet.Location = new System.Drawing.Point(98, 17);
+            this.startStreet.Location = new System.Drawing.Point(106, 17);
             this.startStreet.Name = "startStreet";
-            this.startStreet.Size = new System.Drawing.Size(100, 20);
+            this.startStreet.Size = new System.Drawing.Size(228, 20);
             this.startStreet.TabIndex = 3;
             this.toolTip1.SetToolTip(this.startStreet, "Введите конечную улицу");
+            this.startStreet.KeyUp += new System.Windows.Forms.KeyEventHandler(this.startStreet_KeyUp);
             this.startStreet.MouseLeave += new System.EventHandler(this.startStreet_MouseLeave);
             this.startStreet.MouseHover += new System.EventHandler(this.startStreet_MouseHover);
             // 
             // endStreet
             // 
-            this.endStreet.Location = new System.Drawing.Point(224, 17);
+            this.endStreet.Location = new System.Drawing.Point(364, 17);
             this.endStreet.Name = "endStreet";
-            this.endStreet.Size = new System.Drawing.Size(100, 20);
+            this.endStreet.Size = new System.Drawing.Size(228, 20);
             this.endStreet.TabIndex = 4;
+            this.endStreet.KeyUp += new System.Windows.Forms.KeyEventHandler(this.endStreet_KeyUp);
             this.endStreet.MouseLeave += new System.EventHandler(this.endStreet_MouseLeave);
             this.endStreet.MouseHover += new System.EventHandler(this.endStreet_MouseHover);
             // 
             // directionRequestButton
             // 
-            this.directionRequestButton.Location = new System.Drawing.Point(364, 15);
+            this.directionRequestButton.Location = new System.Drawing.Point(620, 17);
             this.directionRequestButton.Name = "directionRequestButton";
             this.directionRequestButton.Size = new System.Drawing.Size(100, 23);
             this.directionRequestButton.TabIndex = 5;
@@ -94,7 +96,6 @@
             this.gMap.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.gMap.CanDragMap = true;
             this.gMap.Cursor = System.Windows.Forms.Cursors.Cross;
-            this.gMap.DragButton = System.Windows.Forms.MouseButtons.Left;
             this.gMap.EmptyTileColor = System.Drawing.Color.Navy;
             this.gMap.GrayScaleMode = false;
             this.gMap.HelperLineOption = GMap.NET.WindowsForms.HelperLineOptions.DontShow;
@@ -112,7 +113,7 @@
             this.gMap.ScaleMode = GMap.NET.WindowsForms.ScaleModes.Integer;
             this.gMap.SelectedAreaFillColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(65)))), ((int)(((byte)(105)))), ((int)(((byte)(225)))));
             this.gMap.ShowTileGridLines = false;
-            this.gMap.Size = new System.Drawing.Size(533, 408);
+            this.gMap.Size = new System.Drawing.Size(708, 408);
             this.gMap.TabIndex = 8;
             this.gMap.Zoom = 10D;
             this.gMap.Load += new System.EventHandler(this.gMap_Load);
@@ -121,7 +122,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(557, 513);
+            this.ClientSize = new System.Drawing.Size(732, 513);
             this.Controls.Add(this.gMap);
             this.Controls.Add(this.DirecrionLabel);
             this.Controls.Add(this.directionRequestButton);

@@ -9,14 +9,23 @@ using System.Windows.Forms;
 using StreetViewer.Service;
 using StreetViewer.Core;
 
+using GMap.NET;
+using GMap.NET.WindowsForms;
+using GMap.NET.WindowsForms.Markers;
+using GMap.NET.MapProviders;
+
 namespace StreetViewer.Interface
 {
     public partial class MainForm : Form
     {
         private const string ERROR_MESSAGE = "Введены некорректные данные";
+        private const string STREET1_TOOLTIP_MESSAGE = "Введите начальную улицу";
+        private const string STREET2_TOOLTIP_MESSAGE = "Введите конечную улицу";
 
-        private double[] geoCode;
         private Controller controller;
+        private GMapOverlay markers;
+        private GMapMarker startStreetMarker;
+        private GMapMarker endStreetMarker;
 
         public MainForm()
         {
@@ -26,24 +35,15 @@ namespace StreetViewer.Interface
             setToolTipProperties(toolTip2);
         }
 
+        // ==============================================================================================================
+        // = Implementation
+        // ==============================================================================================================
+
         private void directionRequestButton_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(startStreet.Text) && string.IsNullOrEmpty(endStreet.Text))
+            if (string.IsNullOrEmpty(startStreet.Text) || string.IsNullOrEmpty(endStreet.Text))
             {
                 resultLabel.Text = ERROR_MESSAGE;
-            }
-            else if (!string.IsNullOrEmpty(startStreet.Text) && string.IsNullOrEmpty(endStreet.Text))
-            {
-                geoCode = controller.getGeocoding(startStreet.Text);
-                if (geoCode != null)
-                {
-                    gMap.Position = new GMap.NET.PointLatLng(geoCode[0], geoCode[1]);
-                    gMap.Zoom = 15;
-                }
-            }
-            else if (string.IsNullOrEmpty(startStreet.Text) && !string.IsNullOrEmpty(endStreet.Text))
-            {
-                geoCode = controller.getGeocoding(endStreet.Text);
             }
             else
             {
@@ -62,29 +62,13 @@ namespace StreetViewer.Interface
 
         private void gMap_Load(object sender, EventArgs e)
         {
-            gMap.MapProvider = GMap.NET.MapProviders.BingMapProvider.Instance;
-            GMap.NET.GMaps.Instance.Mode = GMap.NET.AccessMode.ServerOnly;
+            gMap.MapProvider = GoogleMapProvider.Instance;
+            GMaps.Instance.Mode = AccessMode.ServerOnly;
             gMap.SetPositionByKeywords("Moscow, Russia");
-        }
+            gMap.ShowCenter = false;
+            gMap.DragButton = System.Windows.Forms.MouseButtons.Left;
 
-        private void startStreet_MouseHover(object sender, EventArgs e)
-        {
-            toolTip1.SetToolTip(startStreet, "Введите начальную улицу");
-        }
-
-        private void startStreet_MouseLeave(object sender, EventArgs e)
-        {
-            toolTip1.Hide(startStreet);
-        }
-
-        private void endStreet_MouseHover(object sender, EventArgs e)
-        {
-            toolTip2.SetToolTip(endStreet, "Введите конечную улицу");
-        }
-
-        private void endStreet_MouseLeave(object sender, EventArgs e)
-        {
-            toolTip1.Hide(endStreet);
+            markers = new GMapOverlay("markers");
         }
 
         private void setToolTipProperties(System.Windows.Forms.ToolTip toolTip)
@@ -93,6 +77,84 @@ namespace StreetViewer.Interface
             toolTip.InitialDelay = 1000;
             toolTip.ReshowDelay = 500;
             toolTip.ShowAlways = true;
+        }
+
+        // ==============================================================================================================
+        // = startStreet TextBox events
+        // ==============================================================================================================
+
+        private void startStreet_MouseHover(object sender, EventArgs e)
+        {
+            toolTip1.SetToolTip(startStreet, STREET1_TOOLTIP_MESSAGE);
+        }
+
+        private void startStreet_MouseLeave(object sender, EventArgs e)
+        {
+            toolTip1.Hide(startStreet);
+        }
+
+        private void startStreet_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter && !string.IsNullOrEmpty(startStreet.Text))
+            {
+                double[] geoCode = controller.getGeocoding(startStreet.Text);
+                if (geoCode != null)
+                {
+                    PointLatLng point = new PointLatLng(geoCode[0], geoCode[1]);
+                    gMap.Position = point;
+                    gMap.Zoom = 15;
+
+                    startStreetMarker = new GMarkerGoogle(point, GMarkerGoogleType.blue);
+                    markers.Markers.Add(startStreetMarker);
+                    gMap.Overlays.Add(markers);
+                }
+                else
+                {
+                    resultLabel.Text = ERROR_MESSAGE;
+                }
+                e.Handled = true;
+            }
+        }
+
+        // ==============================================================================================================
+        // = endStreet TextBox events
+        // ==============================================================================================================
+
+        private void endStreet_MouseHover(object sender, EventArgs e)
+        {
+            toolTip2.SetToolTip(endStreet, STREET2_TOOLTIP_MESSAGE);
+        }
+
+        private void endStreet_MouseLeave(object sender, EventArgs e)
+        {
+            toolTip1.Hide(endStreet);
+        }
+
+        private void endStreet_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                if (!string.IsNullOrEmpty(endStreet.Text))
+                {
+                    double[] geoCode = controller.getGeocoding(endStreet.Text);
+                    if (geoCode != null)
+                    {
+                        PointLatLng point = new PointLatLng(geoCode[0], geoCode[1]);
+                        gMap.Position = point;
+                        gMap.Zoom = 15;
+
+                        endStreetMarker = new GMarkerGoogle(point, GMarkerGoogleType.red);
+                        markers.Markers.Add(endStreetMarker);
+                        gMap.Overlays.Add(markers);
+                    }
+
+                }
+                else
+                {
+                    resultLabel.Text = ERROR_MESSAGE;
+                }
+                e.Handled = true;
+            }
         }
     }
 }
