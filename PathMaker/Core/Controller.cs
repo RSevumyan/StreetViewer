@@ -23,85 +23,78 @@ namespace StreetViewer.Core
             restService = new RestService();
         }
 
-        public double[] getGeocoding(string streetName)
+        public Location getGeocoding(string streetName)
         {
-            double[] res = new double[2];
             GeocodeJsonReply reply = restService.getGeocoding(streetName);
-            if("ZERO_RESULTS".Equals(reply.Status)){
-                return null;
-            }
-            else{
-                res[0] = reply.Results[0].Geometry.Location.Lat;
-                res[1] = reply.Results[0].Geometry.Location.Lng;
-                return res;
-            }
-        }
-
-        public string getGeocodingAsString(string streetName)
-        {
-            double[] geoCode = getGeocoding(streetName);
-            if (geoCode == null)
+            if ("ZERO_RESULTS".Equals(reply.Status))
             {
                 return null;
             }
             else
             {
-                return geoCode[0] + ",\t" + geoCode[1];
+                double lat = reply.Results[0].Geometry.Location.Lat;
+                double lng = reply.Results[0].Geometry.Location.Lng;
+                return new Location(lat, lng);
             }
-         }
+        }
 
-        public bool getDirection(string startStreet, string endStreet)
+        public IList<Location> getDirection(string startStreet, string endStreet)
         {
             DirectionsStatusJson json = restService.getDirection(startStreet, endStreet);
 
             if ("NOT_FOUND".Equals(json.Status))
             {
-                return false;
+                return null;
             }
             else
             {
-                downloadStreetViewsOfDirection(json.Routes[0].OverviewPolyline.Points);
-                return true;
+                return decodePolyline(json.Routes[0].OverviewPolyline.Points);
             }
+        }
+
+        public void getStreetViews(IList<Location> points)
+        {
+            for (int i = 0; i < points.Count; i++)
+            {
+                double angle = 0;
+
+                if (i < points.Count - 1)
+                {
+                    angle = calculateAngle(points[i].Lat - points[i + 1].Lat, points[i].Lng - points[i + 1].Lng);
+                }
+                else
+                {
+                    angle = calculateAngle(points[i - 1].Lat - points[i].Lat, points[i - 1].Lng - points[i].Lng);
+                }
+
+                Stream viewStream = restService.getStreetViewStream(points[i].Lat.ToString(), points[i].Lng.ToString(), angle.ToString());
+                FileStream fileStream = File.OpenWrite(RESULT_DIRECTORY + "\\" + i + ".jpeg");
+                viewStream.CopyTo(fileStream);
+                fileStream.Close();   
+            }
+            logDirectionCoordinates(points);
         }
 
         // ==============================================================================================================
         // = Implementation
         // ==============================================================================================================
 
-        private void downloadStreetViewsOfDirection(string polyLine)
+        private void logDirectionCoordinates(IList<Location> points)
         {
-            if (polyLine != null)
+            createDirectory();
+            StreamWriter streamWriter = new StreamWriter(RESULT_DIRECTORY + "\\coordinates.txt");
+            for (int i = 0; i < points.Count; i++)
             {
+                streamWriter.WriteLine(points[i].Lat + ";\t" + points[i].Lng + "\r\n");
+            }
+            streamWriter.Close();
+        }
 
-                if (!Directory.Exists(RESULT_DIRECTORY))
-                {
-                    Directory.CreateDirectory(RESULT_DIRECTORY);
-                }
-
-                IList<Location> points = decodePolyline(polyLine);
-                StreamWriter streamWriter = new StreamWriter(RESULT_DIRECTORY + "\\coordinates.txt");
-
-                for (int i = 0; i < points.Count; i++)
-                {
-                    double angle = 0;
-
-                    if (i < points.Count - 1)
-                    {
-                        angle = calculateAngle(points[i].Lat - points[i + 1].Lat, points[i].Lng - points[i + 1].Lng);
-                    }
-                    else
-                    {
-                        angle = calculateAngle(points[i - 1].Lat - points[i].Lat, points[i - 1].Lng - points[i].Lng);
-                    }
-
-                    Stream viewStream = restService.getStreetViewStream(points[i].Lat.ToString(), points[i].Lng.ToString(), angle.ToString());
-                    FileStream fileStream = File.OpenWrite(RESULT_DIRECTORY + "\\" + i + ".jpeg");
-                    viewStream.CopyTo(fileStream);
-                    fileStream.Close();
-                    streamWriter.WriteLine(points[i].Lat + ";\t" + points[i].Lng + "\r\n");
-                }
-                streamWriter.Close();
+        private void createDirectory()
+        {
+            if (!Directory.Exists(RESULT_DIRECTORY))
+            {
+                Directory.CreateDirectory(RESULT_DIRECTORY);
             }
         }
 
