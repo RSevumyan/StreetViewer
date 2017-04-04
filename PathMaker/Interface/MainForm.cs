@@ -22,7 +22,9 @@ namespace StreetViewer.Interface
         private const string ERROR_MESSAGE = "Введены некорректные данные";
         private const string STREET1_TOOLTIP_MESSAGE = "Введите начальную улицу";
         private const string STREET2_TOOLTIP_MESSAGE = "Введите конечную улицу";
-        private const string RESULT_LABEL_TEXT = "TIESTO";
+        private const string RESULTLABEL_TEXT = "TIESTO";
+        private const string RESULTLABEL_STREETVIEWS_DOWNLOADING = "Идет загрузка панорам";
+        private const string RESULTLABEL_STREETVIEWS_SUCCESS = "Панорамы успешно загружены";
 
         private Controller controller;
 
@@ -64,10 +66,22 @@ namespace StreetViewer.Interface
             }
             else
             {
-                resultLabel.Text = RESULT_LABEL_TEXT;
+                resultLabel.Text = RESULTLABEL_TEXT;
                 IList<Location> direction = controller.getDirection(startStreet.Text, endStreet.Text);
-                drawRoute(direction);
+                drawRoute(getListOfPoinLatLng(direction));
+                this.streetViewsRequestButton.Enabled = true;
             }
+        }
+
+
+        // 
+        // streetViewsRequestButton events
+        //
+        private void streetViewsRequestButton_Click(object sender, EventArgs e)
+        {
+            resultLabel.Text = RESULTLABEL_STREETVIEWS_DOWNLOADING;
+            controller.getStreetViews(getListOfLocation(gMap.Overlays[0].Routes[0].Points));
+            resultLabel.Text = RESULTLABEL_STREETVIEWS_SUCCESS;
         }
 
         // 
@@ -120,6 +134,7 @@ namespace StreetViewer.Interface
                     startStreetMarker.Position = position;
                     startStreetMarker.IsVisible = true;
                     route.Points.Clear();
+                    this.streetViewsRequestButton.Enabled = false;
 
                     if (endStreetMarker.Position.Lat == 0 && endStreetMarker.Position.Lng == 0)
                     {
@@ -163,6 +178,7 @@ namespace StreetViewer.Interface
                     endStreetMarker.Position = position;
                     endStreetMarker.IsVisible = true;
                     route.Points.Clear();
+                    this.streetViewsRequestButton.Enabled = false;
 
                     if (startStreetMarker.Position.Lat == 0 && startStreetMarker.Position.Lng == 0)
                     {
@@ -203,19 +219,33 @@ namespace StreetViewer.Interface
             gMap.Position = new PointLatLng(start.Lat - height / 2, start.Lng - width / 2);
         }
 
-        private void drawRoute(IList<Location> locations)
+        private void drawRoute(IList<PointLatLng> points)
+        {
+            route.Points.Clear();
+            route.Points.AddRange(points);
+            gMap.Refresh();
+            gMap.Zoom--;
+            gMap.Zoom++;
+        }
+
+        private IList<PointLatLng> getListOfPoinLatLng(IList<Location> locations)
         {
             List<PointLatLng> points = new List<PointLatLng>();
             foreach (Location location in locations)
             {
                 points.Add(new PointLatLng(location.Lat, location.Lng));
             }
+            return points;
+        }
 
-            route.Points.Clear();
-            route.Points.AddRange(points);
-            gMap.Refresh();
-            gMap.Zoom--;
-            gMap.Zoom++;
+        private IList<Location> getListOfLocation(IList<PointLatLng> points)
+        {
+            List<Location> locations = new List<Location>();
+            foreach (PointLatLng point in points)
+            {
+                locations.Add(new Location(point.Lat, point.Lng));
+            }
+            return locations;
         }
     }
 }

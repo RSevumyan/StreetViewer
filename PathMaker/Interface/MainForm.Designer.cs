@@ -39,6 +39,7 @@
             this.gMap = new GMap.NET.WindowsForms.GMapControl();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.toolTip2 = new System.Windows.Forms.ToolTip(this.components);
+            this.streetViewsRequestButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // resultLabel
@@ -84,7 +85,7 @@
             // DirecrionLabel
             // 
             this.DirecrionLabel.AutoSize = true;
-            this.DirecrionLabel.Location = new System.Drawing.Point(21, 20);
+            this.DirecrionLabel.Location = new System.Drawing.Point(9, 17);
             this.DirecrionLabel.Name = "DirecrionLabel";
             this.DirecrionLabel.Size = new System.Drawing.Size(64, 13);
             this.DirecrionLabel.TabIndex = 7;
@@ -118,11 +119,23 @@
             this.gMap.Zoom = 10D;
             this.gMap.Load += new System.EventHandler(this.gMap_Load);
             // 
+            // streetViewsRequestButton
+            // 
+            this.streetViewsRequestButton.Enabled = false;
+            this.streetViewsRequestButton.Location = new System.Drawing.Point(620, 49);
+            this.streetViewsRequestButton.Name = "streetViewsRequestButton";
+            this.streetViewsRequestButton.Size = new System.Drawing.Size(100, 23);
+            this.streetViewsRequestButton.TabIndex = 9;
+            this.streetViewsRequestButton.Text = "Скачать";
+            this.streetViewsRequestButton.UseVisualStyleBackColor = true;
+            this.streetViewsRequestButton.Click += new System.EventHandler(this.streetViewsRequestButton_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(732, 513);
+            this.Controls.Add(this.streetViewsRequestButton);
             this.Controls.Add(this.gMap);
             this.Controls.Add(this.DirecrionLabel);
             this.Controls.Add(this.directionRequestButton);
@@ -148,6 +161,7 @@
         private GMap.NET.WindowsForms.GMapControl gMap;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.ToolTip toolTip2;
+        private System.Windows.Forms.Button streetViewsRequestButton;
     }
 }
 
