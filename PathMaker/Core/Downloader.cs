@@ -30,14 +30,6 @@ namespace StreetViewer.Core
             this.Status = 0;
         }
 
-        public void iAmAlive()
-        {
-            for (int i = 0; i < points.Count; i++)
-            {
-                Console.WriteLine("I am alive");
-            }
-        }
-
         public void downloadStreetViews()
         {
             createDirectory(path);
