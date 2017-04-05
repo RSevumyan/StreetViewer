@@ -25,7 +25,7 @@ namespace StreetViewer.Interface
     {
         private const string ERROR_MESSAGE = "Введены некорректные данные";
         private const string STREET1_TOOLTIP_MESSAGE = "Введите начальную улицу";
-        private const string STREET2_TOOLTIP_MESSAGE = "Введите конечную улицу";\
+        private const string STREET2_TOOLTIP_MESSAGE = "Введите конечную улицу";
         private const string RESULTLABEL_STREETVIEWS_DOWNLOADING = "Идет загрузка панорам";
         private const string RESULTLABEL_STREETVIEWS_SUCCESS = "Панорамы успешно загружены";
 
