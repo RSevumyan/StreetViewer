@@ -83,8 +83,14 @@ namespace StreetViewer.Interface
             {
                 resultLabel.Text = RESULTLABEL_STREETVIEWS_DOWNLOADING;
                 IList<Location> points = getListOfLocation(gMap.Overlays[0].Routes[0].Points);
-                controller.getStreetViews(points, streetVewsFolderDialog.SelectedPath);
-                resultLabel.Text = RESULTLABEL_STREETVIEWS_SUCCESS;
+                Downloader downloader = controller.getStreetViews(points, streetVewsFolderDialog.SelectedPath);
+
+               /* while (downloader.Status < 100)
+                {
+                    resultLabel.Text = "Загружено " + downloader.Status + "%";
+                    //resultLabel.Refresh();
+                    //System.Threading.Thread.Sleep(1000);
+                }*/
             }
         }
 

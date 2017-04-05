@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\Controller.cs" />
+    <Compile Include="Core\Downloader.cs" />
     <Compile Include="JsonObjects\Common\BoundsJson.cs" />
     <Compile Include="JsonObjects\Common\TextValueJson.cs" />
     <Compile Include="JsonObjects\Direction\DirectionsGeocodedWayPointJson.cs" />

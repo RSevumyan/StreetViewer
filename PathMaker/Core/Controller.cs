@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
+using System.Threading;
+
 using StreetViewer.Service;
 using StreetViewer.JsonObjects.Common;
 using StreetViewer.JsonObjects.Geocoding;
 using StreetViewer.JsonObjects.Direction;
-using System.IO;
+
 
 
 namespace StreetViewer.Core
@@ -51,52 +54,18 @@ namespace StreetViewer.Core
             }
         }
 
-        public void getStreetViews(IList<Location> points, string path)
+        public Downloader getStreetViews(IList<Location> points, string path)
         {
-            createDirectory(path);
-
-            for (int i = 0; i < points.Count; i++)
-            {
-                double angle = 0;
-
-                if (i < points.Count - 1)
-                {
-                    angle = calculateAngle(points[i].Lat - points[i + 1].Lat, points[i].Lng - points[i + 1].Lng);
-                }
-                else
-                {
-                    angle = calculateAngle(points[i - 1].Lat - points[i].Lat, points[i - 1].Lng - points[i].Lng);
-                }
-
-                Stream viewStream = restService.getStreetViewStream(points[i].Lat.ToString(), points[i].Lng.ToString(), angle.ToString());
-                FileStream fileStream = File.OpenWrite(path + "\\" + i + ".jpeg");
-                viewStream.CopyTo(fileStream);
-                fileStream.Close();
-            }
-            logDirectionCoordinates(points, path);
+            Downloader downloader = new Downloader(path, points, restService);
+            Thread downloadThread = new Thread(downloader.downloadStreetViews);
+            downloadThread.Start();
+            //downloader.downloadStreetViews();
+            return downloader;
         }
 
         // ==============================================================================================================
         // = Implementation
         // ==============================================================================================================
-
-        private void logDirectionCoordinates(IList<Location> points, string path)
-        {
-            StreamWriter streamWriter = new StreamWriter(path + "\\coordinates.txt");
-            for (int i = 0; i < points.Count; i++)
-            {
-                streamWriter.WriteLine(points[i].Lat + ";\t" + points[i].Lng + "\r\n");
-            }
-            streamWriter.Close();
-        }
-
-        private void createDirectory(String path)
-        {
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
-        }
 
         private IList<Location> decodePolyline(string encodedPoints)
         {
@@ -171,31 +140,6 @@ namespace StreetViewer.Core
 
             }
             return locationList;
-        }
-
-        private double calculateAngle(double height, double width)
-        {
-            height += height == 0 ? 0.00001 : 0;
-            double angle = Math.Atan(width / height) * (180 / Math.PI);
-
-            if (angle < 0)
-            {
-                angle += 90;
-            }
-
-            if (height >= 0 && width < 0)
-            {
-                angle += 90;
-            }
-            else if (height > 0 && width >= 0)
-            {
-                angle += 180;
-            }
-            else if (height <= 0 && width > 0)
-            {
-                angle += 270;
-            }
-            return angle;
         }
     }
 }
