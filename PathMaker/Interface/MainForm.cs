@@ -50,7 +50,6 @@ namespace StreetViewer.Interface
         // 
         private void directionRequestButton_Click(object sender, EventArgs e)
         {
-
             if (gMap.Overlays[0].Markers[0].IsVisible == false || gMap.Overlays[0].Markers[1].IsVisible == false)
             {
                 KeyEventArgs keyEventArgs = new KeyEventArgs(Keys.Enter);
@@ -79,9 +78,14 @@ namespace StreetViewer.Interface
         //
         private void streetViewsRequestButton_Click(object sender, EventArgs e)
         {
-            resultLabel.Text = RESULTLABEL_STREETVIEWS_DOWNLOADING;
-            controller.getStreetViews(getListOfLocation(gMap.Overlays[0].Routes[0].Points));
-            resultLabel.Text = RESULTLABEL_STREETVIEWS_SUCCESS;
+
+            if (streetVewsFolderDialog.ShowDialog() == DialogResult.OK)
+            {
+                resultLabel.Text = RESULTLABEL_STREETVIEWS_DOWNLOADING;
+                IList<Location> points = getListOfLocation(gMap.Overlays[0].Routes[0].Points);
+                controller.getStreetViews(points, streetVewsFolderDialog.SelectedPath);
+                resultLabel.Text = RESULTLABEL_STREETVIEWS_SUCCESS;
+            }
         }
 
         // 

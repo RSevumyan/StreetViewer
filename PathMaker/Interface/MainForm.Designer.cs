@@ -40,6 +40,7 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.toolTip2 = new System.Windows.Forms.ToolTip(this.components);
             this.streetViewsRequestButton = new System.Windows.Forms.Button();
+            this.streetVewsFolderDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.SuspendLayout();
             // 
             // resultLabel
@@ -130,6 +131,10 @@
             this.streetViewsRequestButton.UseVisualStyleBackColor = true;
             this.streetViewsRequestButton.Click += new System.EventHandler(this.streetViewsRequestButton_Click);
             // 
+            // streetVewsFolderDialog
+            // 
+            this.streetVewsFolderDialog.Description = "Выберите папку для сохранения результатов";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -162,6 +167,7 @@
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.ToolTip toolTip2;
         private System.Windows.Forms.Button streetViewsRequestButton;
+        private System.Windows.Forms.FolderBrowserDialog streetVewsFolderDialog;
     }
 }
 

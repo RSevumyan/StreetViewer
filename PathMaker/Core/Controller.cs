@@ -13,7 +13,6 @@ namespace StreetViewer.Core
 {
     class Controller
     {
-        private const string RESULT_DIRECTORY = "results";
         private const int ORDER_PARAM = 50;
 
         private RestService restService;
@@ -52,8 +51,10 @@ namespace StreetViewer.Core
             }
         }
 
-        public void getStreetViews(IList<Location> points)
+        public void getStreetViews(IList<Location> points, string path)
         {
+            createDirectory(path);
+
             for (int i = 0; i < points.Count; i++)
             {
                 double angle = 0;
@@ -68,21 +69,20 @@ namespace StreetViewer.Core
                 }
 
                 Stream viewStream = restService.getStreetViewStream(points[i].Lat.ToString(), points[i].Lng.ToString(), angle.ToString());
-                FileStream fileStream = File.OpenWrite(RESULT_DIRECTORY + "\\" + i + ".jpeg");
+                FileStream fileStream = File.OpenWrite(path + "\\" + i + ".jpeg");
                 viewStream.CopyTo(fileStream);
-                fileStream.Close();   
+                fileStream.Close();
             }
-            logDirectionCoordinates(points);
+            logDirectionCoordinates(points, path);
         }
 
         // ==============================================================================================================
         // = Implementation
         // ==============================================================================================================
 
-        private void logDirectionCoordinates(IList<Location> points)
+        private void logDirectionCoordinates(IList<Location> points, string path)
         {
-            createDirectory();
-            StreamWriter streamWriter = new StreamWriter(RESULT_DIRECTORY + "\\coordinates.txt");
+            StreamWriter streamWriter = new StreamWriter(path + "\\coordinates.txt");
             for (int i = 0; i < points.Count; i++)
             {
                 streamWriter.WriteLine(points[i].Lat + ";\t" + points[i].Lng + "\r\n");
@@ -90,11 +90,11 @@ namespace StreetViewer.Core
             streamWriter.Close();
         }
 
-        private void createDirectory()
+        private void createDirectory(String path)
         {
-            if (!Directory.Exists(RESULT_DIRECTORY))
+            if (!Directory.Exists(path))
             {
-                Directory.CreateDirectory(RESULT_DIRECTORY);
+                Directory.CreateDirectory(path);
             }
         }
 
