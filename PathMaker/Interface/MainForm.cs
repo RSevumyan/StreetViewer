@@ -6,6 +6,8 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Threading;
+
 using StreetViewer.Service;
 using StreetViewer.Core;
 using StreetViewer.JsonObjects.Common;
@@ -17,12 +19,13 @@ using GMap.NET.MapProviders;
 
 namespace StreetViewer.Interface
 {
+    delegate void StringArgReturningVoidDelegate(string text);
+
     public partial class MainForm : Form
     {
         private const string ERROR_MESSAGE = "Введены некорректные данные";
         private const string STREET1_TOOLTIP_MESSAGE = "Введите начальную улицу";
-        private const string STREET2_TOOLTIP_MESSAGE = "Введите конечную улицу";
-        private const string RESULTLABEL_TEXT = "TIESTO";
+        private const string STREET2_TOOLTIP_MESSAGE = "Введите конечную улицу";\
         private const string RESULTLABEL_STREETVIEWS_DOWNLOADING = "Идет загрузка панорам";
         private const string RESULTLABEL_STREETVIEWS_SUCCESS = "Панорамы успешно загружены";
 
@@ -65,7 +68,6 @@ namespace StreetViewer.Interface
             }
             else
             {
-                resultLabel.Text = RESULTLABEL_TEXT;
                 IList<Location> direction = controller.getDirection(startStreet.Text, endStreet.Text);
                 drawRoute(getListOfPoinLatLng(direction));
                 this.streetViewsRequestButton.Enabled = true;
@@ -83,14 +85,10 @@ namespace StreetViewer.Interface
             {
                 resultLabel.Text = RESULTLABEL_STREETVIEWS_DOWNLOADING;
                 IList<Location> points = getListOfLocation(gMap.Overlays[0].Routes[0].Points);
-                Downloader downloader = controller.getStreetViews(points, streetVewsFolderDialog.SelectedPath);
-
-               /* while (downloader.Status < 100)
-                {
-                    resultLabel.Text = "Загружено " + downloader.Status + "%";
-                    //resultLabel.Refresh();
-                    //System.Threading.Thread.Sleep(1000);
-                }*/
+                string path = streetVewsFolderDialog.SelectedPath;
+                Downloader downloader = controller.getStreetViews(points, path);
+                Thread downloadStatusThread = new Thread(updateStatus);
+                downloadStatusThread.Start(downloader);
             }
         }
 
@@ -256,6 +254,32 @@ namespace StreetViewer.Interface
                 locations.Add(new Location(point.Lat, point.Lng));
             }
             return locations;
+        }
+
+        private void updateStatus(object obj)
+        {
+            Downloader downloader = (Downloader)obj;
+            while (downloader.Status < 100)
+            {
+                this.setText("Загружено " + downloader.Status + "%");
+                System.Threading.Thread.Sleep(1000);
+            }
+
+            this.setText("Загружено " + downloader.Status + "%");
+            System.Threading.Thread.Sleep(1000);
+        }
+
+        private void setText(string text)
+        {
+            if (this.resultLabel.InvokeRequired)
+            {
+                StringArgReturningVoidDelegate d = new StringArgReturningVoidDelegate(setText);
+                this.Invoke(d, new object[] { text });
+            }
+            else
+            {
+                this.resultLabel.Text = text;
+            }
         }
     }
 }
