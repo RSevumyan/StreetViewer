@@ -16,6 +16,7 @@ using GMap.NET;
 using GMap.NET.WindowsForms;
 using GMap.NET.WindowsForms.Markers;
 using GMap.NET.MapProviders;
+using GMap.NET.ObjectModel;
 
 namespace StreetViewer.Interface
 {
@@ -30,9 +31,8 @@ namespace StreetViewer.Interface
         private const string RESULTLABEL_STREETVIEWS_SUCCESS = "Панорамы успешно загружены";
 
         private Controller controller;
-
-        private GMapMarker startStreetMarker;
-        private GMapMarker endStreetMarker;
+        private Downloader downloader;
+        private ObservableCollection<GMapMarker> markers;
         private GMapRoute route;
 
         public MainForm()
@@ -53,24 +53,40 @@ namespace StreetViewer.Interface
         // 
         private void directionRequestButton_Click(object sender, EventArgs e)
         {
-            if (gMap.Overlays[0].Markers[0].IsVisible == false || gMap.Overlays[0].Markers[1].IsVisible == false)
+            if (markers.Count > 1 && markers[0].IsVisible == true)
+            {
+                IList<PointLatLng> points = new List<PointLatLng>();
+                for (int i = 0; i < markers.Count - 1; i++)
+                {
+                    string start = getStringOfLocation(markers[i].Position);
+                    string end = getStringOfLocation(markers[i + 1].Position);
+                    IList<PointLatLng> partOfPoints = getListOfPoinLatLng(controller.getDirection(start, end));
+                    foreach (PointLatLng point in partOfPoints)
+                    {
+                        points.Add(point);
+                    }
+                }
+                drawRoute(points);
+                if (downloader == null)
+                {
+                    this.streetViewsRequestButton.Enabled = true;
+                }
+            }
+            else if (!string.IsNullOrEmpty(startStreet.Text) && !string.IsNullOrEmpty(endStreet.Text))
             {
                 KeyEventArgs keyEventArgs = new KeyEventArgs(Keys.Enter);
                 startStreet_KeyUp(sender, keyEventArgs);
                 endStreet_KeyUp(sender, keyEventArgs);
-            }
-
-            if (string.IsNullOrEmpty(startStreet.Text) || string.IsNullOrEmpty(endStreet.Text))
-            {
-                Location location = controller.getGeocoding(startStreet.Text);
-
-                resultLabel.Text = ERROR_MESSAGE;
+                IList<Location> direction = controller.getDirection(startStreet.Text, endStreet.Text);
+                drawRoute(getListOfPoinLatLng(direction));
+                if (downloader == null)
+                {
+                    this.streetViewsRequestButton.Enabled = true;
+                }
             }
             else
             {
-                IList<Location> direction = controller.getDirection(startStreet.Text, endStreet.Text);
-                drawRoute(getListOfPoinLatLng(direction));
-                this.streetViewsRequestButton.Enabled = true;
+                resultLabel.Text = ERROR_MESSAGE;
             }
         }
 
@@ -86,9 +102,10 @@ namespace StreetViewer.Interface
                 resultLabel.Text = RESULTLABEL_STREETVIEWS_DOWNLOADING;
                 IList<Location> points = getListOfLocation(gMap.Overlays[0].Routes[0].Points);
                 string path = streetVewsFolderDialog.SelectedPath;
-                Downloader downloader = controller.getStreetViews(points, path);
+                downloader = controller.getStreetViews(points, path);
                 Thread downloadStatusThread = new Thread(updateStatus);
-                downloadStatusThread.Start(downloader);
+                downloadStatusThread.Start();
+                streetViewsRequestButton.Enabled = false;
             }
         }
 
@@ -104,18 +121,42 @@ namespace StreetViewer.Interface
             gMap.DragButton = System.Windows.Forms.MouseButtons.Left;
 
             GMapOverlay overlay = new GMapOverlay("overlay");
-            startStreetMarker = new GMarkerGoogle(new PointLatLng(0, 0), GMarkerGoogleType.blue);
-            startStreetMarker.IsVisible = false;
-            startStreetMarker.ToolTipText = "Начальная точка";
-            overlay.Markers.Add(startStreetMarker);
-            endStreetMarker = new GMarkerGoogle(new PointLatLng(0, 0), GMarkerGoogleType.red);
-            endStreetMarker.IsVisible = false;
-            endStreetMarker.ToolTipText = "Конечная точка";
-            overlay.Markers.Add(endStreetMarker);
+            markers = overlay.Markers;
             route = new GMapRoute("Test route");
             route.Stroke = new Pen(Color.Red, 2);
             overlay.Routes.Add(route);
             gMap.Overlays.Add(overlay);
+        }
+
+        private void gMap_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                route.Clear();
+                double lat = gMap.FromLocalToLatLng(e.X, e.Y).Lat;
+                double lng = gMap.FromLocalToLatLng(e.X, e.Y).Lng;
+                addMarkerByMouseClick(new PointLatLng(lat, lng));
+                gMap.Zoom--;
+                gMap.Zoom++;
+            }
+        }
+
+        private void gMap_OnMarkerClick(GMapMarker item, MouseEventArgs e)
+        {
+            route.Clear();
+            markers.Remove(item);
+            List<PointLatLng> oldMarkers = new List<PointLatLng>();
+            foreach (GMapMarker marker in markers)
+            {
+                oldMarkers.Add(marker.Position);
+            }
+            markers.Clear();
+            foreach (PointLatLng position in oldMarkers)
+            {
+                addMarkerByMouseClick(position);
+            }
+            gMap.Zoom--;
+            gMap.Zoom++;
         }
 
         // 
@@ -139,20 +180,10 @@ namespace StreetViewer.Interface
                 if (geoCode != null)
                 {
                     PointLatLng position = new PointLatLng(geoCode.Lat, geoCode.Lng);
-                    startStreetMarker.Position = position;
-                    startStreetMarker.IsVisible = true;
+                    addMarkerByKeyUp(position, true);
                     route.Points.Clear();
                     this.streetViewsRequestButton.Enabled = false;
-
-                    if (endStreetMarker.Position.Lat == 0 && endStreetMarker.Position.Lng == 0)
-                    {
-                        gMap.Position = position;
-                        gMap.Zoom = 15;
-                    }
-                    else
-                    {
-                        calculateZoomAndPosition(startStreetMarker.Position, endStreetMarker.Position);
-                    }
+                    calculateZoomAndPosition();
                 }
                 else
                 {
@@ -183,21 +214,10 @@ namespace StreetViewer.Interface
                 if (geoCode != null)
                 {
                     PointLatLng position = new PointLatLng(geoCode.Lat, geoCode.Lng);
-                    endStreetMarker.Position = position;
-                    endStreetMarker.IsVisible = true;
+                    addMarkerByKeyUp(position, false);
                     route.Points.Clear();
                     this.streetViewsRequestButton.Enabled = false;
-
-                    if (startStreetMarker.Position.Lat == 0 && startStreetMarker.Position.Lng == 0)
-                    {
-                        gMap.Position = position;
-                        gMap.Zoom = 15;
-
-                    }
-                    else
-                    {
-                        calculateZoomAndPosition(startStreetMarker.Position, endStreetMarker.Position);
-                    }
+                    calculateZoomAndPosition();
                 }
                 else
                 {
@@ -218,13 +238,24 @@ namespace StreetViewer.Interface
             toolTip.ShowAlways = true;
         }
 
-        private void calculateZoomAndPosition(PointLatLng start, PointLatLng end)
+        private void calculateZoomAndPosition()
         {
-            double height = start.Lat - end.Lat;
-            double width = start.Lng - end.Lng;
-            double distance = Math.Sqrt(Math.Pow(height, 2) + Math.Pow(width, 2));
-            gMap.Zoom = 18 - Math.Round(Math.Log(distance * 60 / 0.06, 2));
-            gMap.Position = new PointLatLng(start.Lat - height / 2, start.Lng - width / 2);
+
+            if (markers.Count == 1)
+            {
+                gMap.Position = markers[0].Position;
+                gMap.Zoom = 15;
+            }
+            else if (markers.Count > 1)
+            {
+                PointLatLng start = markers[0].Position;
+                PointLatLng end = markers[markers.Count - 1].Position;
+                double height = start.Lat - end.Lat;
+                double width = start.Lng - end.Lng;
+                double distance = Math.Sqrt(Math.Pow(height, 2) + Math.Pow(width, 2));
+                gMap.Zoom = 18 - Math.Round(Math.Log(distance * 60 / 0.06, 2));
+                gMap.Position = new PointLatLng(start.Lat - height / 2, start.Lng - width / 2);
+            }
         }
 
         private void drawRoute(IList<PointLatLng> points)
@@ -256,17 +287,17 @@ namespace StreetViewer.Interface
             return locations;
         }
 
-        private void updateStatus(object obj)
+        private void updateStatus()
         {
-            Downloader downloader = (Downloader)obj;
             while (downloader.Status < 100)
             {
                 this.setText("Загружено " + downloader.Status + "%");
                 System.Threading.Thread.Sleep(1000);
             }
 
-            this.setText("Загружено " + downloader.Status + "%");
-            System.Threading.Thread.Sleep(1000);
+            this.setText("Загрузка завершена");
+            downloader = null;
+            streetViewsRequestButton.Enabled = true;
         }
 
         private void setText(string text)
@@ -280,6 +311,81 @@ namespace StreetViewer.Interface
             {
                 this.resultLabel.Text = text;
             }
+        }
+
+        private void addMarkerByKeyUp(PointLatLng position, bool isStartMarker)
+        {
+            if (markers.Count == 0)
+            {
+                markers.Add(getStartMarker(position));
+
+                if (!isStartMarker)
+                {
+                    markers.Add(getEndMarker(position));
+                    markers[0].IsVisible = false;
+                }
+            }
+            else if (markers.Count == 1)
+            {
+                if (isStartMarker)
+                {
+                    markers[0].Position = position;
+                    markers[0].IsVisible = true;
+                }
+                else
+                {
+                    markers.Add(getEndMarker(position));
+                }
+            }
+            else
+            {
+                if (isStartMarker)
+                {
+                    markers[0].Position = position;
+                    markers[0].IsVisible = true;
+                }
+                else
+                {
+                    markers[markers.Count - 1].Position = position;
+                }
+            }
+        }
+
+        private void addMarkerByMouseClick(PointLatLng position)
+        {
+            if (markers.Count == 0)
+            {
+                markers.Add(getStartMarker(position));
+            }
+            else
+            {
+                if (markers.Count > 1)
+                {
+                    int count = markers.Count - 1;
+                    markers[count].ToolTipText = "Промежуточная точка № " + count;
+                }
+                markers.Add(getEndMarker(position));
+            }
+        }
+
+        private GMapMarker getStartMarker(PointLatLng position)
+        {
+            GMapMarker startMarker = new GMarkerGoogle(position, GMarkerGoogleType.blue);
+            startMarker.ToolTipText = "Начальная точка";
+            return startMarker;
+        }
+
+
+        private GMapMarker getEndMarker(PointLatLng position)
+        {
+            GMapMarker endMarker = new GMarkerGoogle(position, GMarkerGoogleType.red);
+            endMarker.ToolTipText = "Конечная точка";
+            return endMarker;
+        }
+
+        private string getStringOfLocation(PointLatLng point)
+        {
+            return point.Lat.ToString().Replace(",", ".") + "," + point.Lng.ToString().Replace(",", ".");
         }
     }
 }

@@ -118,7 +118,9 @@
             this.gMap.Size = new System.Drawing.Size(708, 408);
             this.gMap.TabIndex = 8;
             this.gMap.Zoom = 10D;
+            this.gMap.OnMarkerClick += new GMap.NET.WindowsForms.MarkerClick(this.gMap_OnMarkerClick);
             this.gMap.Load += new System.EventHandler(this.gMap_Load);
+            this.gMap.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.gMap_MouseDoubleClick);
             // 
             // streetViewsRequestButton
             // 
@@ -150,7 +152,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "MainForm";
-            this.Text = "Form1";
+            this.Text = "StreetViewer";
             this.ResumeLayout(false);
             this.PerformLayout();
 

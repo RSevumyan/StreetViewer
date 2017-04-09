@@ -5,8 +5,10 @@ using System.Text;
 using System.Net;
 using System.Runtime.Serialization.Json;
 using System.IO;
+
 using StreetViewer.JsonObjects.Geocoding;
 using StreetViewer.JsonObjects.Direction;
+using StreetViewer.JsonObjects.Common;
 
 namespace StreetViewer.Service
 {
@@ -14,7 +16,7 @@ namespace StreetViewer.Service
     {
         private const String GOOGLE_API_KEY = "AIzaSyDZvb2R8tCxXLOJQMo7i-38-wzRGmPKKLE";
         private const String GEOCODING_URL_FORMAT = "https://maps.googleapis.com/maps/api/geocode/json?address={0}&key={1}";
-        private const String DESTINATION_URL_FORMAT = "https://maps.googleapis.com/maps/api/directions/json?origin={0}&destination={1}&mode=driving&key={2}";
+        private const String DIRECTION_URL_FORMAT = "https://maps.googleapis.com/maps/api/directions/json?origin={0}&destination={1}&mode=driving&key={2}";
         private const String STREET_VIEW_URL_FORMAT = "https://maps.googleapis.com/maps/api/streetview?size=640x640&location={0},{1}&heading={2}&pitch=-0.76&key={3}";
 
         private const int BYTES_LENGTH = 2048;
@@ -34,9 +36,9 @@ namespace StreetViewer.Service
             return objResponse as GeocodeJsonReply;
         }
 
-        public DirectionsStatusJson getDirection(string startStreet, string endStreet)
+        public DirectionsStatusJson getDirection(string start, string end)
         {
-            HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(String.Format(DESTINATION_URL_FORMAT, startStreet, endStreet, GOOGLE_API_KEY));
+            HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(String.Format(DIRECTION_URL_FORMAT, start, end, GOOGLE_API_KEY));
             HttpWebResponse response = reques.GetResponse() as HttpWebResponse;
             DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(DirectionsStatusJson));
             object objResponse = jsonSerializer.ReadObject(response.GetResponseStream());
