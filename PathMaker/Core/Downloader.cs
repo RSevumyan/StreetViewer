@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Net;
 
 using StreetViewer.JsonObjects.Common;
 using StreetViewer.Service;
@@ -45,12 +46,18 @@ namespace StreetViewer.Core
                 {
                     angle = calculateAngle(points[i - 1].Lat - points[i].Lat, points[i - 1].Lng - points[i].Lng);
                 }
-
-                Stream viewStream = restService.getStreetViewStream(points[i].Lat.ToString(), points[i].Lng.ToString(), angle.ToString());
-                FileStream fileStream = File.OpenWrite(path + "\\" + i + ".jpeg");
-                viewStream.CopyTo(fileStream);
-                fileStream.Close();
-                Status = (i + 1) * 100 / points.Count;
+                try
+                {
+                    Stream viewStream = restService.getStreetViewStream(points[i].Lat.ToString(), points[i].Lng.ToString(), angle.ToString());
+                    FileStream fileStream = File.OpenWrite(path + "\\" + i + ".jpeg");
+                    viewStream.CopyTo(fileStream);
+                    fileStream.Close();
+                    Status = (i + 1) * 100 / points.Count;
+                }
+                catch (WebException ex)
+                {
+                    i--;
+                }
             }
             logDirectionCoordinates(points, path);
         }

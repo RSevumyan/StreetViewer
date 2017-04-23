@@ -59,7 +59,6 @@ namespace StreetViewer.Core
             Downloader downloader = new Downloader(path, points, restService);
             Thread downloadThread = new Thread(downloader.downloadStreetViews);
             downloadThread.Start();
-            //downloader.downloadStreetViews();
             return downloader;
         }
 

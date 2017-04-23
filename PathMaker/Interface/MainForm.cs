@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Threading;
+using System.Text.RegularExpressions;
+using System.Net;
 
 using StreetViewer.Service;
 using StreetViewer.Core;
@@ -21,10 +23,12 @@ using GMap.NET.ObjectModel;
 namespace StreetViewer.Interface
 {
     delegate void StringArgReturningVoidDelegate(string text);
+    delegate void BoolArgReturningVoidDelegate(bool availability);
 
     public partial class MainForm : Form
     {
         private const string ERROR_MESSAGE = "Введены некорректные данные";
+        private const string WEB_ERROR_MESSAGE = "Ошибка соединения";
         private const string STREET1_TOOLTIP_MESSAGE = "Введите начальную улицу";
         private const string STREET2_TOOLTIP_MESSAGE = "Введите конечную улицу";
         private const string RESULTLABEL_STREETVIEWS_DOWNLOADING = "Идет загрузка панорам";
@@ -53,40 +57,47 @@ namespace StreetViewer.Interface
         // 
         private void directionRequestButton_Click(object sender, EventArgs e)
         {
-            if (markers.Count > 1 && markers[0].IsVisible == true)
+            try
             {
-                IList<PointLatLng> points = new List<PointLatLng>();
-                for (int i = 0; i < markers.Count - 1; i++)
+                if (markers.Count > 1 && markers[0].IsVisible == true)
                 {
-                    string start = getStringOfLocation(markers[i].Position);
-                    string end = getStringOfLocation(markers[i + 1].Position);
-                    IList<PointLatLng> partOfPoints = getListOfPoinLatLng(controller.getDirection(start, end));
-                    foreach (PointLatLng point in partOfPoints)
+                    IList<PointLatLng> points = new List<PointLatLng>();
+                    for (int i = 0; i < markers.Count - 1; i++)
                     {
-                        points.Add(point);
+                        string start = getStringOfLocation(markers[i].Position);
+                        string end = getStringOfLocation(markers[i + 1].Position);
+                        IList<PointLatLng> partOfPoints = getListOfPoinLatLng(controller.getDirection(start, end));
+                        foreach (PointLatLng point in partOfPoints)
+                        {
+                            points.Add(point);
+                        }
+                    }
+                    drawRoute(points);
+                    if (downloader == null)
+                    {
+                        this.streetViewsRequestButton.Enabled = true;
                     }
                 }
-                drawRoute(points);
-                if (downloader == null)
+                else if (!string.IsNullOrEmpty(startStreet.Text) && !string.IsNullOrEmpty(endStreet.Text))
                 {
-                    this.streetViewsRequestButton.Enabled = true;
+                    KeyEventArgs keyEventArgs = new KeyEventArgs(Keys.Enter);
+                    startStreet_KeyUp(sender, keyEventArgs);
+                    endStreet_KeyUp(sender, keyEventArgs);
+                    IList<Location> direction = controller.getDirection(startStreet.Text, endStreet.Text);
+                    drawRoute(getListOfPoinLatLng(direction));
+                    if (downloader == null)
+                    {
+                        this.streetViewsRequestButton.Enabled = true;
+                    }
+                }
+                else
+                {
+                    resultLabel.Text = ERROR_MESSAGE;
                 }
             }
-            else if (!string.IsNullOrEmpty(startStreet.Text) && !string.IsNullOrEmpty(endStreet.Text))
+            catch (WebException ex)
             {
-                KeyEventArgs keyEventArgs = new KeyEventArgs(Keys.Enter);
-                startStreet_KeyUp(sender, keyEventArgs);
-                endStreet_KeyUp(sender, keyEventArgs);
-                IList<Location> direction = controller.getDirection(startStreet.Text, endStreet.Text);
-                drawRoute(getListOfPoinLatLng(direction));
-                if (downloader == null)
-                {
-                    this.streetViewsRequestButton.Enabled = true;
-                }
-            }
-            else
-            {
-                resultLabel.Text = ERROR_MESSAGE;
+                resultLabel.Text = WEB_ERROR_MESSAGE;
             }
         }
 
@@ -96,16 +107,46 @@ namespace StreetViewer.Interface
         //
         private void streetViewsRequestButton_Click(object sender, EventArgs e)
         {
-
-            if (streetVewsFolderDialog.ShowDialog() == DialogResult.OK)
+            streetVewsFolderDialog.SelectedPath = AppDomain.CurrentDomain.BaseDirectory;
+            try
             {
-                resultLabel.Text = RESULTLABEL_STREETVIEWS_DOWNLOADING;
-                IList<Location> points = getListOfLocation(gMap.Overlays[0].Routes[0].Points);
-                string path = streetVewsFolderDialog.SelectedPath;
-                downloader = controller.getStreetViews(points, path);
-                Thread downloadStatusThread = new Thread(updateStatus);
-                downloadStatusThread.Start();
-                streetViewsRequestButton.Enabled = false;
+                if (streetVewsFolderDialog.ShowDialog() == DialogResult.OK)
+                {
+                    resultLabel.Text = RESULTLABEL_STREETVIEWS_DOWNLOADING;
+                    IList<Location> points = getListOfLocation(gMap.Overlays[0].Routes[0].Points);
+                    string path = streetVewsFolderDialog.SelectedPath + "\\";
+
+                    if (string.IsNullOrEmpty(startStreet.Text))
+                    {
+                        path += points[0].Lat + "_" + points[0].Lng + ";";
+                    }
+                    else
+                    {
+                        string startPath = Regex.Replace(startStreet.Text, @"[$""#+\\|/<>?{}&%*]", "");
+                        startPath = Regex.Replace(startPath, @"\s", "_");
+                        path += startPath + ";";
+                    }
+
+                    if (string.IsNullOrEmpty(endStreet.Text))
+                    {
+                        path += points[points.Count - 1].Lat + "_" + points[points.Count - 1].Lng;
+                    }
+                    else
+                    {
+                        string endPath = Regex.Replace(endStreet.Text, @"[$""#+\\|/<>?{}&%*]", "");
+                        endPath = Regex.Replace(endPath, @"\s", "_");
+                        path += endPath;
+                    }
+
+                    downloader = controller.getStreetViews(points, path);
+                    Thread downloadStatusThread = new Thread(updateStatus);
+                    downloadStatusThread.Start();
+                    streetViewsRequestButton.Enabled = false;
+                }
+            }
+            catch (WebException ex)
+            {
+                resultLabel.Text = WEB_ERROR_MESSAGE;
             }
         }
 
@@ -176,20 +217,28 @@ namespace StreetViewer.Interface
         {
             if (e.KeyCode == Keys.Enter && !string.IsNullOrEmpty(startStreet.Text))
             {
-                Location geoCode = controller.getGeocoding(startStreet.Text);
-                if (geoCode != null)
+                try
                 {
-                    PointLatLng position = new PointLatLng(geoCode.Lat, geoCode.Lng);
-                    addMarkerByKeyUp(position, true);
-                    route.Points.Clear();
-                    this.streetViewsRequestButton.Enabled = false;
-                    calculateZoomAndPosition();
+                    Location geoCode = controller.getGeocoding(startStreet.Text);
+
+                    if (geoCode != null)
+                    {
+                        PointLatLng position = new PointLatLng(geoCode.Lat, geoCode.Lng);
+                        addMarkerByKeyUp(position, true);
+                        route.Points.Clear();
+                        this.streetViewsRequestButton.Enabled = false;
+                        calculateZoomAndPosition();
+                    }
+                    else
+                    {
+                        resultLabel.Text = ERROR_MESSAGE;
+                    }
+                    e.Handled = true;
                 }
-                else
+                catch (WebException ex)
                 {
-                    resultLabel.Text = ERROR_MESSAGE;
+                    resultLabel.Text = WEB_ERROR_MESSAGE;
                 }
-                e.Handled = true;
             }
         }
 
@@ -210,20 +259,27 @@ namespace StreetViewer.Interface
         {
             if (e.KeyCode == Keys.Enter && !string.IsNullOrEmpty(endStreet.Text))
             {
-                Location geoCode = controller.getGeocoding(endStreet.Text);
-                if (geoCode != null)
+                try
                 {
-                    PointLatLng position = new PointLatLng(geoCode.Lat, geoCode.Lng);
-                    addMarkerByKeyUp(position, false);
-                    route.Points.Clear();
-                    this.streetViewsRequestButton.Enabled = false;
-                    calculateZoomAndPosition();
+                    Location geoCode = controller.getGeocoding(endStreet.Text);
+                    if (geoCode != null)
+                    {
+                        PointLatLng position = new PointLatLng(geoCode.Lat, geoCode.Lng);
+                        addMarkerByKeyUp(position, false);
+                        route.Points.Clear();
+                        this.streetViewsRequestButton.Enabled = false;
+                        calculateZoomAndPosition();
+                    }
+                    else
+                    {
+                        resultLabel.Text = ERROR_MESSAGE;
+                    }
+                    e.Handled = true;
                 }
-                else
+                catch (WebException ex)
                 {
-                    resultLabel.Text = ERROR_MESSAGE;
+                    resultLabel.Text = WEB_ERROR_MESSAGE;
                 }
-                e.Handled = true;
             }
         }
 
@@ -297,7 +353,7 @@ namespace StreetViewer.Interface
 
             this.setText("Загрузка завершена");
             downloader = null;
-            streetViewsRequestButton.Enabled = true;
+            this.setAvailability(true);
         }
 
         private void setText(string text)
@@ -310,6 +366,19 @@ namespace StreetViewer.Interface
             else
             {
                 this.resultLabel.Text = text;
+            }
+        }
+
+        private void setAvailability(bool availability)
+        {
+            if (this.streetViewsRequestButton.InvokeRequired)
+            {
+                BoolArgReturningVoidDelegate d = new BoolArgReturningVoidDelegate(setAvailability);
+                this.Invoke(d, new object[] { availability });
+            }
+            else
+            {
+                this.streetViewsRequestButton.Enabled = availability;
             }
         }
 
