@@ -16,13 +16,13 @@ namespace StreetViewer.Core
 {
     class Controller
     {
-        private const int ORDER_PARAM = 50;
-
+        private Parameters parameters;
         private RestService restService;
 
         public Controller()
         {
             restService = new RestService();
+            parameters = new Parameters();
         }
 
         public Location getGeocoding(string streetName)
@@ -60,6 +60,11 @@ namespace StreetViewer.Core
             Thread downloadThread = new Thread(downloader.downloadStreetViews);
             downloadThread.Start();
             return downloader;
+        }
+
+        public void setParams(int order)
+        {
+            parameters.Order = order;
         }
 
         // ==============================================================================================================
@@ -121,9 +126,9 @@ namespace StreetViewer.Core
                     double hypotenuse = Math.Sqrt((height * height) + (width * width));
 
 
-                    if (hypotenuse > ORDER_PARAM)
+                    if (hypotenuse > parameters.Order)
                     {
-                        int order = (int)hypotenuse / ORDER_PARAM;
+                        int order = (int)hypotenuse / parameters.Order;
                         double latStep = height / (order + 1) / 100000;
                         double lngStep = width / (order + 1) / 100000;
 

@@ -150,6 +150,18 @@ namespace StreetViewer.Interface
             }
         }
 
+
+        // 
+        // settingsButton events
+        //
+        private void settingsButton_Click(object sender, EventArgs e)
+        {
+            if (orderInput.Value != 0)
+            {
+                controller.setParams((int)orderInput.Value);
+            }
+        }
+
         // 
         // gMap events
         // 

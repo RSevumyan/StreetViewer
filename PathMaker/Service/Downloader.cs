@@ -8,7 +8,7 @@ using System.Net;
 using StreetViewer.JsonObjects.Common;
 using StreetViewer.Service;
 
-namespace StreetViewer.Core
+namespace StreetViewer.Service
 {
     class Downloader
     {
