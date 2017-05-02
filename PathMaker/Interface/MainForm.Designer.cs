@@ -44,9 +44,9 @@
             this.tabControl = new System.Windows.Forms.TabControl();
             this.workTabPage = new System.Windows.Forms.TabPage();
             this.SettingsTabPage = new System.Windows.Forms.TabPage();
+            this.orderInput = new System.Windows.Forms.NumericUpDown();
             this.settingsButton = new System.Windows.Forms.Button();
             this.orderLabel = new System.Windows.Forms.Label();
-            this.orderInput = new System.Windows.Forms.NumericUpDown();
             this.tabControl.SuspendLayout();
             this.workTabPage.SuspendLayout();
             this.SettingsTabPage.SuspendLayout();
@@ -56,7 +56,7 @@
             // resultLabel
             // 
             this.resultLabel.AutoSize = true;
-            this.resultLabel.Location = new System.Drawing.Point(11, 49);
+            this.resultLabel.Location = new System.Drawing.Point(13, 54);
             this.resultLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.resultLabel.Name = "resultLabel";
             this.resultLabel.Size = new System.Drawing.Size(0, 13);
@@ -96,7 +96,7 @@
             // DirecrionLabel
             // 
             this.DirecrionLabel.AutoSize = true;
-            this.DirecrionLabel.Location = new System.Drawing.Point(13, 16);
+            this.DirecrionLabel.Location = new System.Drawing.Point(13, 13);
             this.DirecrionLabel.Name = "DirecrionLabel";
             this.DirecrionLabel.Size = new System.Drawing.Size(64, 13);
             this.DirecrionLabel.TabIndex = 7;
@@ -160,6 +160,7 @@
             // workTabPage
             // 
             this.workTabPage.Controls.Add(this.gMap);
+            this.workTabPage.Controls.Add(this.resultLabel);
             this.workTabPage.Controls.Add(this.streetViewsRequestButton);
             this.workTabPage.Controls.Add(this.DirecrionLabel);
             this.workTabPage.Controls.Add(this.directionRequestButton);
@@ -186,6 +187,13 @@
             this.SettingsTabPage.Text = "Настройки";
             this.SettingsTabPage.UseVisualStyleBackColor = true;
             // 
+            // orderInput
+            // 
+            this.orderInput.Location = new System.Drawing.Point(65, 26);
+            this.orderInput.Name = "orderInput";
+            this.orderInput.Size = new System.Drawing.Size(120, 20);
+            this.orderInput.TabIndex = 3;
+            // 
             // settingsButton
             // 
             this.settingsButton.Location = new System.Drawing.Point(299, 414);
@@ -205,20 +213,12 @@
             this.orderLabel.TabIndex = 1;
             this.orderLabel.Text = "Шаг";
             // 
-            // orderInput
-            // 
-            this.orderInput.Location = new System.Drawing.Point(65, 26);
-            this.orderInput.Name = "orderInput";
-            this.orderInput.Size = new System.Drawing.Size(120, 20);
-            this.orderInput.TabIndex = 3;
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(732, 513);
             this.Controls.Add(this.tabControl);
-            this.Controls.Add(this.resultLabel);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "MainForm";
@@ -230,7 +230,6 @@
             this.SettingsTabPage.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.orderInput)).EndInit();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 

@@ -17,7 +17,7 @@ namespace StreetViewer.Core
 
         public Parameters()
         {
-            this.order = 50;
+            this.order = 1;
         }
     }
 }
