@@ -6,13 +6,13 @@ using System.Net;
 using System.Runtime.Serialization.Json;
 using System.IO;
 
-using StreetViewer.JsonObjects.Geocoding;
-using StreetViewer.JsonObjects.Direction;
-using StreetViewer.JsonObjects.Common;
+using StreetViewer.JsonObjects.GoogleApiJson.Geocoding;
+using StreetViewer.JsonObjects.GoogleApiJson.Direction;
+using StreetViewer.JsonObjects.GoogleApiJson.Common;
 
 namespace StreetViewer.Service
 {
-    class RestService
+    class GoogleRestService
     {
         private const String GOOGLE_API_KEY = "AIzaSyDZvb2R8tCxXLOJQMo7i-38-wzRGmPKKLE";
         private const String GEOCODING_URL_FORMAT = "https://maps.googleapis.com/maps/api/geocode/json?address={0}&key={1}";
@@ -21,9 +21,8 @@ namespace StreetViewer.Service
 
         private const int BYTES_LENGTH = 2048;
 
-        public RestService()
+        public GoogleRestService()
         {
-
         }
 
         public GeocodeJsonReply getGeocoding(String place)

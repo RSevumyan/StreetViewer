@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 
-namespace StreetViewer.JsonObjects.Geocoding
+namespace StreetViewer.JsonObjects.GoogleApiJson.Geocoding
 {
     [DataContract]
     public class GeocodeJsonReply

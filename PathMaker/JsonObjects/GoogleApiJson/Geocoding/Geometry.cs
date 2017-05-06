@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
-using StreetViewer.JsonObjects.Common;
+using StreetViewer.JsonObjects.GoogleApiJson.Common;
 
-namespace StreetViewer.JsonObjects.Geocoding
+namespace StreetViewer.JsonObjects.GoogleApiJson.Geocoding
 { 
     [DataContract]
     public class Geometry

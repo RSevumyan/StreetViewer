@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
 
-namespace StreetViewer.JsonObjects.Direction
+namespace StreetViewer.JsonObjects.GoogleApiJson.Direction
 {
     [DataContract]
     public class DirectionsStatusJson

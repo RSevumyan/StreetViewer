@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
 
-namespace StreetViewer.JsonObjects.Common
+namespace StreetViewer.JsonObjects.GoogleApiJson.Common
 {
     [DataContract]
     public class BoundsJson

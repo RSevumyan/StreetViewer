@@ -15,7 +15,7 @@ namespace StreetViewer.Service
         private int status;
         private string path;
         private IList<Location> points;
-        private RestService restService;
+        private GoogleRestService restService;
 
         public int Status
         {
@@ -23,7 +23,7 @@ namespace StreetViewer.Service
             set { status = value; }
         }
 
-        public Downloader(string path, IList<Location> points, RestService restService)
+        public Downloader(string path, IList<Location> points, GoogleRestService restService)
         {
             this.path = path;
             this.points = points;

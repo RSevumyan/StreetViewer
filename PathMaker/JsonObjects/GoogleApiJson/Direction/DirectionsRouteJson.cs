@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using StreetViewer.JsonObjects.Common;
+using StreetViewer.JsonObjects.GoogleApiJson.Common;
 using System.Runtime.Serialization;
 
-namespace StreetViewer.JsonObjects.Direction
+namespace StreetViewer.JsonObjects.GoogleApiJson.Direction
 {
     [DataContract]
     public class DirectionsRouteJson

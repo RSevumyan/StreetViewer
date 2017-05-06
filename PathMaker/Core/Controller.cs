@@ -17,12 +17,12 @@ namespace StreetViewer.Core
     class Controller
     {
         private Parameters parameters;
-        private RestService restService;
+        private GoogleRestService restService;
         private GeographiService geoService;
 
         public Controller()
         {
-            restService = new RestService();
+            restService = new GoogleRestService();
             parameters = new Parameters();
             geoService = new GeographiService();
         }
