@@ -47,10 +47,14 @@
             this.orderInput = new System.Windows.Forms.NumericUpDown();
             this.settingsButton = new System.Windows.Forms.Button();
             this.orderLabel = new System.Windows.Forms.Label();
+            this.radiusUpDown = new System.Windows.Forms.NumericUpDown();
+            this.radiusLabel = new System.Windows.Forms.Label();
+            this.allDirectionsButton = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
             this.workTabPage.SuspendLayout();
             this.SettingsTabPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.orderInput)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.radiusUpDown)).BeginInit();
             this.SuspendLayout();
             // 
             // resultLabel
@@ -85,11 +89,11 @@
             // 
             // directionRequestButton
             // 
-            this.directionRequestButton.Location = new System.Drawing.Point(617, 13);
+            this.directionRequestButton.Location = new System.Drawing.Point(595, 13);
             this.directionRequestButton.Name = "directionRequestButton";
-            this.directionRequestButton.Size = new System.Drawing.Size(100, 23);
+            this.directionRequestButton.Size = new System.Drawing.Size(111, 23);
             this.directionRequestButton.TabIndex = 5;
-            this.directionRequestButton.Text = "Найти";
+            this.directionRequestButton.Text = "Найти путь";
             this.directionRequestButton.UseVisualStyleBackColor = true;
             this.directionRequestButton.Click += new System.EventHandler(this.directionRequestButton_Click);
             // 
@@ -135,7 +139,7 @@
             // streetViewsRequestButton
             // 
             this.streetViewsRequestButton.Enabled = false;
-            this.streetViewsRequestButton.Location = new System.Drawing.Point(617, 54);
+            this.streetViewsRequestButton.Location = new System.Drawing.Point(292, 54);
             this.streetViewsRequestButton.Name = "streetViewsRequestButton";
             this.streetViewsRequestButton.Size = new System.Drawing.Size(100, 23);
             this.streetViewsRequestButton.TabIndex = 9;
@@ -159,6 +163,7 @@
             // 
             // workTabPage
             // 
+            this.workTabPage.Controls.Add(this.allDirectionsButton);
             this.workTabPage.Controls.Add(this.gMap);
             this.workTabPage.Controls.Add(this.resultLabel);
             this.workTabPage.Controls.Add(this.streetViewsRequestButton);
@@ -176,6 +181,8 @@
             // 
             // SettingsTabPage
             // 
+            this.SettingsTabPage.Controls.Add(this.radiusLabel);
+            this.SettingsTabPage.Controls.Add(this.radiusUpDown);
             this.SettingsTabPage.Controls.Add(this.orderInput);
             this.SettingsTabPage.Controls.Add(this.settingsButton);
             this.SettingsTabPage.Controls.Add(this.orderLabel);
@@ -189,7 +196,7 @@
             // 
             // orderInput
             // 
-            this.orderInput.Location = new System.Drawing.Point(65, 26);
+            this.orderInput.Location = new System.Drawing.Point(82, 24);
             this.orderInput.Name = "orderInput";
             this.orderInput.Size = new System.Drawing.Size(120, 20);
             this.orderInput.TabIndex = 3;
@@ -213,6 +220,32 @@
             this.orderLabel.TabIndex = 1;
             this.orderLabel.Text = "Шаг";
             // 
+            // radiusUpDown
+            // 
+            this.radiusUpDown.Location = new System.Drawing.Point(82, 68);
+            this.radiusUpDown.Name = "radiusUpDown";
+            this.radiusUpDown.Size = new System.Drawing.Size(120, 20);
+            this.radiusUpDown.TabIndex = 4;
+            // 
+            // radiusLabel
+            // 
+            this.radiusLabel.AutoSize = true;
+            this.radiusLabel.Location = new System.Drawing.Point(13, 75);
+            this.radiusLabel.Name = "radiusLabel";
+            this.radiusLabel.Size = new System.Drawing.Size(43, 13);
+            this.radiusLabel.TabIndex = 5;
+            this.radiusLabel.Text = "Радиус";
+            // 
+            // allDirectionsButton
+            // 
+            this.allDirectionsButton.Location = new System.Drawing.Point(595, 49);
+            this.allDirectionsButton.Name = "allDirectionsButton";
+            this.allDirectionsButton.Size = new System.Drawing.Size(111, 23);
+            this.allDirectionsButton.TabIndex = 10;
+            this.allDirectionsButton.Text = "Найти все пути";
+            this.allDirectionsButton.UseVisualStyleBackColor = true;
+            this.allDirectionsButton.Click += new System.EventHandler(this.allDirectionsButton_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -229,6 +262,7 @@
             this.SettingsTabPage.ResumeLayout(false);
             this.SettingsTabPage.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.orderInput)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.radiusUpDown)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -251,6 +285,9 @@
         private System.Windows.Forms.Label orderLabel;
         private System.Windows.Forms.Button settingsButton;
         private System.Windows.Forms.NumericUpDown orderInput;
+        private System.Windows.Forms.Label radiusLabel;
+        private System.Windows.Forms.NumericUpDown radiusUpDown;
+        private System.Windows.Forms.Button allDirectionsButton;
     }
 }
 

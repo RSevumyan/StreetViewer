@@ -12,7 +12,7 @@ using System.Net;
 
 using StreetViewer.Service;
 using StreetViewer.Core;
-using StreetViewer.JsonObjects.Common;
+using StreetViewer.JsonObjects.GoogleApiJson.Common;
 
 using GMap.NET;
 using GMap.NET.WindowsForms;
@@ -59,7 +59,7 @@ namespace StreetViewer.Interface
         {
             try
             {
-                if (markers.Count > 1 && markers[0].IsVisible == true)
+                if (markers.Count > 1 && markers[0].IsVisible)
                 {
                     IList<PointLatLng> points = new List<PointLatLng>();
                     for (int i = 0; i < markers.Count - 1; i++)
@@ -156,9 +156,9 @@ namespace StreetViewer.Interface
         //
         private void settingsButton_Click(object sender, EventArgs e)
         {
-            if (orderInput.Value != 0)
+            if (orderInput.Value != 0 && radiusUpDown.Value != 0)
             {
-                controller.setParams((int)orderInput.Value);
+                controller.setParams((int)orderInput.Value, (int)radiusUpDown.Value);
             }
         }
 
@@ -292,6 +292,21 @@ namespace StreetViewer.Interface
                 {
                     resultLabel.Text = WEB_ERROR_MESSAGE;
                 }
+            }
+        }
+
+
+        // 
+        // allDirectionsButtonEvents
+        //
+        private void allDirectionsButton_Click(object sender, EventArgs e)
+        {
+            //List<List<Location>> listOfDirections = controller.getAllDirectionsOfArea()
+            if (markers[0].IsVisible)
+            {
+                string lat = coordinateToString(markers[0].Position.Lat);
+                string lng = coordinateToString(markers[0].Position.Lng);
+                List<List<Location>> listOfDirections = controller.getAllDirectionsOfArea(lat, lng);
             }
         }
 
@@ -466,7 +481,12 @@ namespace StreetViewer.Interface
 
         private string getStringOfLocation(PointLatLng point)
         {
-            return point.Lat.ToString().Replace(",", ".") + "," + point.Lng.ToString().Replace(",", ".");
+            return coordinateToString(point.Lat) + "," + coordinateToString(point.Lng);
+        }
+
+        private string coordinateToString(double coordinate)
+        {
+            return coordinate.ToString().Replace(",", ".");
         }
     }
 }

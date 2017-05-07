@@ -10,7 +10,7 @@ namespace StreetViewer.JsonObjects.OverpassApiJson
     public class Tag
     {
         private string foot;
-        [DataContract(Name = "foot")]
+        [DataMember(Name = "foot")]
         public string Foot
         {
             get { return foot; }
@@ -18,7 +18,7 @@ namespace StreetViewer.JsonObjects.OverpassApiJson
         }
 
         private string highway;
-        [DataContract(Name = "highway")]
+        [DataMember(Name = "highway")]
         public string Highway
         {
             get { return highway; }
@@ -26,7 +26,7 @@ namespace StreetViewer.JsonObjects.OverpassApiJson
         }
 
         private string lanes;
-        [DataContract(Name = "lanes")]
+        [DataMember(Name = "lanes")]
         public string Lanes
         {
             get { return lanes; }
@@ -34,7 +34,7 @@ namespace StreetViewer.JsonObjects.OverpassApiJson
         }
 
         private string lit;
-        [DataContract(Name = "lit")]
+        [DataMember(Name = "lit")]
         public string Lit
         {
             get { return lit; }
@@ -42,7 +42,7 @@ namespace StreetViewer.JsonObjects.OverpassApiJson
         }
 
         private string name;
-        [DataContract(Name = "name")]
+        [DataMember(Name = "name")]
         public string Name
         {
             get { return name; }
@@ -50,7 +50,7 @@ namespace StreetViewer.JsonObjects.OverpassApiJson
         }
 
         private string surface;
-        [DataContract(Name = "surface")]
+        [DataMember(Name = "surface")]
         public string Surface
         {
             get { return surface; }
@@ -58,7 +58,7 @@ namespace StreetViewer.JsonObjects.OverpassApiJson
         }
 
         private string wikidata;
-        [DataContract(Name = "wikidata")]
+        [DataMember(Name = "wikidata")]
         public string Wikidata
         {
             get { return wikidata; }
@@ -66,7 +66,7 @@ namespace StreetViewer.JsonObjects.OverpassApiJson
         }
 
         private string wikipedia;
-        [DataContract(Name = "wikipedia")]
+        [DataMember(Name = "wikipedia")]
         public string Wikipedia
         {
             get { return wikipedia; }
@@ -74,7 +74,7 @@ namespace StreetViewer.JsonObjects.OverpassApiJson
         }
 
         private string cladr_003A_code;
-        [DataContract(Name = "cladr_003A_code")]
+        [DataMember(Name = "cladr_003A_code")]
         public string Cladr_003A_code
         {
             get { return cladr_003A_code; }
@@ -82,7 +82,7 @@ namespace StreetViewer.JsonObjects.OverpassApiJson
         }
 
         private string cladr_003A_name;
-        [DataContract(Name = "cladr_003A_name")]
+        [DataMember(Name = "cladr_003A_name")]
         public string Cladr_003A_name
         {
             get { return cladr_003A_name; }
@@ -90,7 +90,7 @@ namespace StreetViewer.JsonObjects.OverpassApiJson
         }
 
         private string cladr_003A_suffix;
-        [DataContract(Name = "cladr_003A_suffix")]
+        [DataMember(Name = "cladr_003A_suffix")]
         public string Cladr_003A_suffix
         {
             get { return cladr_003A_suffix; }
@@ -98,7 +98,7 @@ namespace StreetViewer.JsonObjects.OverpassApiJson
         }
 
         private string omkum_003A_code;
-        [DataContract(Name = "omkum_003A_code")]
+        [DataMember(Name = "omkum_003A_code")]
         public string Omkum_003A_code
         {
             get { return omkum_003A_code; }
@@ -106,7 +106,7 @@ namespace StreetViewer.JsonObjects.OverpassApiJson
         }
 
         private string sorting_name;
-        [DataContract(Name = "sorting_name")]
+        [DataMember(Name = "sorting_name")]
         public string Sorting_name
         {
             get { return sorting_name; }

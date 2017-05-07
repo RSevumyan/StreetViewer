@@ -61,18 +61,18 @@
   <ItemGroup>
     <Compile Include="Core\Controller.cs" />
     <Compile Include="Core\Parameters.cs" />
-    <Compile Include="JsonObjects\Common\BoundsJson.cs" />
-    <Compile Include="JsonObjects\Common\TextValueJson.cs" />
-    <Compile Include="JsonObjects\Direction\DirectionsGeocodedWayPointJson.cs" />
-    <Compile Include="JsonObjects\Direction\DirectionsLegJson.cs" />
-    <Compile Include="JsonObjects\Direction\DirectionsPolylineJson.cs" />
-    <Compile Include="JsonObjects\Direction\DirectionsRouteJson.cs" />
-    <Compile Include="JsonObjects\Direction\DirectionsStatusJson.cs" />
-    <Compile Include="JsonObjects\Direction\DirectionsStepJson.cs" />
-    <Compile Include="JsonObjects\Geocoding\GeocodeJsonReply.cs" />
-    <Compile Include="JsonObjects\Geocoding\Geometry.cs" />
-    <Compile Include="JsonObjects\Geocoding\JsonAddress.cs" />
-    <Compile Include="JsonObjects\Common\Location.cs" />
+    <Compile Include="JsonObjects\GoogleApiJson\Common\BoundsJson.cs" />
+    <Compile Include="JsonObjects\GoogleApiJson\Common\TextValueJson.cs" />
+    <Compile Include="JsonObjects\GoogleApiJson\Direction\DirectionsGeocodedWayPointJson.cs" />
+    <Compile Include="JsonObjects\GoogleApiJson\Direction\DirectionsLegJson.cs" />
+    <Compile Include="JsonObjects\GoogleApiJson\Direction\DirectionsPolylineJson.cs" />
+    <Compile Include="JsonObjects\GoogleApiJson\Direction\DirectionsRouteJson.cs" />
+    <Compile Include="JsonObjects\GoogleApiJson\Direction\DirectionsStatusJson.cs" />
+    <Compile Include="JsonObjects\GoogleApiJson\Direction\DirectionsStepJson.cs" />
+    <Compile Include="JsonObjects\GoogleApiJson\Geocoding\GeocodeJsonReply.cs" />
+    <Compile Include="JsonObjects\GoogleApiJson\Geocoding\Geometry.cs" />
+    <Compile Include="JsonObjects\GoogleApiJson\Geocoding\JsonAddress.cs" />
+    <Compile Include="JsonObjects\GoogleApiJson\Common\Location.cs" />
     <Compile Include="Interface\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -80,10 +80,15 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Core\Program.cs" />
+    <Compile Include="JsonObjects\OverpassApiJson\Element.cs" />
+    <Compile Include="JsonObjects\OverpassApiJson\GeoJson.cs" />
+    <Compile Include="JsonObjects\OverpassApiJson\Osm3s.cs" />
+    <Compile Include="JsonObjects\OverpassApiJson\Tag.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Service\Downloader.cs" />
     <Compile Include="Service\GeographiService.cs" />
-    <Compile Include="Service\RestService.cs" />
+    <Compile Include="Service\GoogleRestService.cs" />
+    <Compile Include="Service\OverpassRestService.cs" />
     <EmbeddedResource Include="Interface\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -111,7 +116,7 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="JsonObjects\StreetView\" />
+    <Folder Include="JsonObjects\GoogleApiJson\StreetView\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Icons-Land-Vista-Map-Markers-Map-Marker-Marker-Inside-Chartreuse.ico" />

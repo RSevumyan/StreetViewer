@@ -8,6 +8,7 @@ namespace StreetViewer.Core
     class Parameters
     {
         private int order;
+        private int radius;
 
         public int Order
         {
@@ -15,9 +16,16 @@ namespace StreetViewer.Core
             set { order = value; }
         }
 
+        public int Radius
+        {
+            get { return radius; }
+            set { radius = value; }
+        }
+
         public Parameters()
         {
             this.order = 1;
+            this.radius = 100;
         }
     }
 }

@@ -31,7 +31,6 @@ namespace StreetViewer.Service
             HttpWebResponse response = reques.GetResponse() as HttpWebResponse;
             DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(GeocodeJsonReply));
             object objResponse = jsonSerializer.ReadObject(response.GetResponseStream());
-
             return objResponse as GeocodeJsonReply;
         }
 
@@ -42,7 +41,6 @@ namespace StreetViewer.Service
             DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(DirectionsStatusJson));
             object objResponse = jsonSerializer.ReadObject(response.GetResponseStream());
             return objResponse as DirectionsStatusJson;
-
         }
 
         public Stream getStreetViewStream(string lat, string lng, string heading)

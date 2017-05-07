@@ -21,7 +21,8 @@ namespace StreetViewer.Service
         public GeoJson getWaysOfArea(string radius, string lat, string lng)
         {
             string query = String.Format(OVERPASS_WAYS_FROM_AREA_QUERY, radius, lat, lng);
-            HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(String.Format(OVERPASS_REQUEST, OVERPASS_WAYS_FROM_AREA_QUERY));
+            string request = String.Format(OVERPASS_REQUEST, query);
+            HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(request);
             HttpWebResponse response = reques.GetResponse() as HttpWebResponse;
             DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(GeoJson));
             object objResponse = jsonSerializer.ReadObject(response.GetResponseStream());

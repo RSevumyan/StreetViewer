@@ -5,7 +5,7 @@ using System.Text;
 using System.IO;
 using System.Net;
 
-using StreetViewer.JsonObjects.Common;
+using StreetViewer.JsonObjects.GoogleApiJson.Common;
 using StreetViewer.Service;
 
 namespace StreetViewer.Service
