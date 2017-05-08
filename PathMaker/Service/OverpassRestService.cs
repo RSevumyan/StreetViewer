@@ -11,7 +11,7 @@ namespace StreetViewer.Service
 {
     class OverpassRestService
     {
-        private const string OVERPASS_WAYS_FROM_AREA_QUERY = "[out:json];way(around:{0},{1},{2})[\"highway\"~\"motorway|trunk|primary|motorway_link|trunk_link|primary_link|secondary|tertiary\"];(._;>;);out;";
+        private const string OVERPASS_WAYS_FROM_AREA_QUERY = "[out:json];way(around:{0},{1},{2})[\"highway\"~\"motorway|trunk|primary|motorway_link|trunk_link|primary_link|secondary|tertiary|unclassified\"];(._;>;);out;";
         private const string OVERPASS_REQUEST = "http://overpass-api.de//api/interpreter?data={0}";
 
         public GeoJson getWaysOfArea(string radius, string lat, string lng)

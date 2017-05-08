@@ -65,7 +65,7 @@ namespace StreetViewer.Core
             }
         }
 
-        public Downloader getStreetViews(IList<Location> points, string path)
+        public Downloader getStreetViews(List<List<Location>> points, string path)
         {
             Downloader downloader = new Downloader(path, points, googleService);
             Thread downloadThread = new Thread(downloader.downloadStreetViews);

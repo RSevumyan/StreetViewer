@@ -45,15 +45,20 @@ namespace StreetViewer.Interface
             gMap.ShowCenter = false;
             gMap.DragButton = System.Windows.Forms.MouseButtons.Left;
 
-            GMapOverlay overlay = new GMapOverlay("overlay1");
-            markers = overlay.Markers;
+            GMapOverlay directionOverlay = new GMapOverlay("DirectionOverlay");
+            markers = directionOverlay.Markers;
             route = new GMapRoute("Test route");
             route.Stroke = new Pen(Color.Red, 2);
-            overlay.Routes.Add(route);
-            gMap.Overlays.Add(overlay);
+            directionOverlay.Routes.Add(route);
+            gMap.Overlays.Add(directionOverlay);
 
-            GMapOverlay overlay2 = new GMapOverlay("overlay2");
-            gMap.Overlays.Add(overlay2);
+            GMapOverlay allDirectionsOverlay = new GMapOverlay("AllDirectionsOverlay");
+            gMap.Overlays.Add(allDirectionsOverlay);
+
+            GMapOverlay circleOverlay = new GMapOverlay("CircleOverlay");
+            gMap.Overlays.Add(circleOverlay);
+
+            listOfRoutes = new List<GMapRoute>();
         }
 
         public void calculateZoomAndPosition()
@@ -90,11 +95,11 @@ namespace StreetViewer.Interface
             listOfRoutes = new List<GMapRoute>();
             foreach (List<PointLatLng> points in listOfDirections)
             {
-                route = new GMapRoute("Test route");
-                route.Stroke = new Pen(Color.Red, 2);
-                route.Points.AddRange(points);
-                listOfRoutes.Add(route);
-                gMap.Overlays[1].Routes.Add(route);
+                GMapRoute localRoute = new GMapRoute("Test route");
+                localRoute.Stroke = new Pen(Color.Red, 2);
+                localRoute.Points.AddRange(points);
+                listOfRoutes.Add(localRoute);
+                gMap.Overlays[1].Routes.Add(localRoute);
             }
             gMap.Refresh();
             gMap.Zoom--;

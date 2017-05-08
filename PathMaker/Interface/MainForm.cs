@@ -121,6 +121,10 @@ namespace StreetViewer.Interface
                         listOfPoints.Add(localPoints);
                     }
                     gMapForm.drawListOfRoutes(listOfPoints);
+                    if (gMapForm.ListOfRoutes.Count > 0)
+                    {
+                        streetViewsRequestButton.Enabled = true;
+                    }
                 }
                 catch (WebException we)
                 {
@@ -140,9 +144,9 @@ namespace StreetViewer.Interface
                 if (streetVewsFolderDialog.ShowDialog() == DialogResult.OK)
                 {
                     resultLabel.Text = RESULTLABEL_STREETVIEWS_DOWNLOADING;
-                    IList<Location> points = getListOfLocation(gMap.Overlays[0].Routes[0].Points);
                     string path = streetVewsFolderDialog.SelectedPath + "\\";
 
+                    List<Location> points = getListOfLocation(gMap.Overlays[0].Routes[0].Points);
                     if (string.IsNullOrEmpty(startStreet.Text))
                     {
                         path += points[0].Lat + "_" + points[0].Lng + ";";
@@ -165,7 +169,13 @@ namespace StreetViewer.Interface
                         path += endPath;
                     }
 
-                    downloader = controller.getStreetViews(points, path);
+                    List<List<Location>> list = new List<List<Location>>();
+                    list.Add(points);
+                    foreach (GMapRoute route in gMapForm.ListOfRoutes)
+                    {
+                        list.Add(getListOfLocation(route.Points));
+                    }
+                    downloader = controller.getStreetViews(list, path);
                     Thread downloadStatusThread = new Thread(updateStatus);
                     downloadStatusThread.Start();
                     streetViewsRequestButton.Enabled = false;
@@ -316,7 +326,7 @@ namespace StreetViewer.Interface
             return points;
         }
 
-        private IList<Location> getListOfLocation(IList<PointLatLng> points)
+        private List<Location> getListOfLocation(IList<PointLatLng> points)
         {
             List<Location> locations = new List<Location>();
             foreach (PointLatLng point in points)

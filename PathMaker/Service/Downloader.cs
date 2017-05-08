@@ -14,7 +14,8 @@ namespace StreetViewer.Service
     {
         private int status;
         private string path;
-        private IList<Location> points;
+        private List<List<Location>> listOfPoints;
+        private int pointsCount;
         private GoogleRestService restService;
 
         public int Status
@@ -23,43 +24,51 @@ namespace StreetViewer.Service
             set { status = value; }
         }
 
-        public Downloader(string path, IList<Location> points, GoogleRestService restService)
+        public Downloader(string path, List<List<Location>> points, GoogleRestService restService)
         {
             this.path = path;
-            this.points = points;
+            listOfPoints = points;
+            pointsCount = listOfPoints.Sum(list => list.Count);
             this.restService = restService;
             this.Status = 0;
         }
 
         public void downloadStreetViews()
         {
-            createDirectory(path);
-            for (int i = 0; i < points.Count; i++)
+            int count = 0;
+            for (int i = 0; i < listOfPoints.Count; i++)
             {
-                double angle = 0;
+                string localPath = path + "\\" + i + 1;
+                createDirectory(localPath);
+                for (int j = 0; j < listOfPoints[i].Count; j++)
+                {
+                    double angle = 0;
 
-                if (i < points.Count - 1)
-                {
-                    angle = calculateAngle(points[i].Lat - points[i + 1].Lat, points[i].Lng - points[i + 1].Lng);
+                    if (j < listOfPoints[i].Count - 1)
+                    {
+                        angle = calculateAngle(listOfPoints[i][j].Lat - listOfPoints[i][j + 1].Lat, listOfPoints[i][j].Lng - listOfPoints[i][j + 1].Lng);
+                    }
+                    else
+                    {
+                        angle = calculateAngle(listOfPoints[i][j - 1].Lat - listOfPoints[i][j].Lat, listOfPoints[i][j - 1].Lng - listOfPoints[i][j].Lng);
+                    }
+                    try
+                    {
+                        Stream viewStream = restService.getStreetViewStream(listOfPoints[i][j].Lat.ToString(), listOfPoints[i][j].Lng.ToString(), angle.ToString());
+                        FileStream fileStream = File.OpenWrite(localPath + "\\" + j + ".jpeg");
+                        viewStream.CopyTo(fileStream);
+                        fileStream.Close();
+                        count++;
+                        Status = count * 100 / pointsCount;
+                    }
+                    catch (WebException ex)
+                    {
+                        j--;
+                    }
                 }
-                else
-                {
-                    angle = calculateAngle(points[i - 1].Lat - points[i].Lat, points[i - 1].Lng - points[i].Lng);
-                }
-                try
-                {
-                    Stream viewStream = restService.getStreetViewStream(points[i].Lat.ToString(), points[i].Lng.ToString(), angle.ToString());
-                    FileStream fileStream = File.OpenWrite(path + "\\" + i + ".jpeg");
-                    viewStream.CopyTo(fileStream);
-                    fileStream.Close();
-                    Status = (i + 1) * 100 / points.Count;
-                }
-                catch (WebException ex)
-                {
-                    i--;
-                }
+                logDirectionCoordinates(listOfPoints[i], localPath);
             }
-            logDirectionCoordinates(points, path);
+           
         }
 
         // ==============================================================================================================
