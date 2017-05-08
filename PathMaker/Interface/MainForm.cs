@@ -38,6 +38,7 @@ namespace StreetViewer.Interface
         private Downloader downloader;
         private ObservableCollection<GMapMarker> markers;
         private GMapRoute route;
+        private List<GMapRoute> listOfRoutes;
 
         public MainForm()
         {
@@ -101,6 +102,26 @@ namespace StreetViewer.Interface
             }
         }
 
+        // 
+        // allDirectionsButtonEvents
+        //
+        private void allDirectionsButton_Click(object sender, EventArgs e)
+        {
+            if (markers[0].IsVisible)
+            {
+                string lat = coordinateToString(markers[0].Position.Lat);
+                string lng = coordinateToString(markers[0].Position.Lng);
+                List<List<Location>> listOfDirections = controller.getAllDirectionsOfArea(lat, lng);
+
+                List<IList<PointLatLng>> listOfPoints = new List<IList<PointLatLng>>();
+                foreach (List<Location> direction in listOfDirections)
+                {
+                    IList<PointLatLng> localPoints = getListOfPoinLatLng(direction);
+                    listOfPoints.Add(localPoints);
+                }
+                drawListOfRoutes(listOfPoints);
+            }
+        }
 
         // 
         // streetViewsRequestButton events
@@ -173,12 +194,15 @@ namespace StreetViewer.Interface
             gMap.ShowCenter = false;
             gMap.DragButton = System.Windows.Forms.MouseButtons.Left;
 
-            GMapOverlay overlay = new GMapOverlay("overlay");
+            GMapOverlay overlay = new GMapOverlay("overlay1");
             markers = overlay.Markers;
             route = new GMapRoute("Test route");
             route.Stroke = new Pen(Color.Red, 2);
             overlay.Routes.Add(route);
             gMap.Overlays.Add(overlay);
+
+            GMapOverlay overlay2 = new GMapOverlay("overlay2");
+            gMap.Overlays.Add(overlay2);
         }
 
         private void gMap_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -295,21 +319,6 @@ namespace StreetViewer.Interface
             }
         }
 
-
-        // 
-        // allDirectionsButtonEvents
-        //
-        private void allDirectionsButton_Click(object sender, EventArgs e)
-        {
-            //List<List<Location>> listOfDirections = controller.getAllDirectionsOfArea()
-            if (markers[0].IsVisible)
-            {
-                string lat = coordinateToString(markers[0].Position.Lat);
-                string lng = coordinateToString(markers[0].Position.Lng);
-                List<List<Location>> listOfDirections = controller.getAllDirectionsOfArea(lat, lng);
-            }
-        }
-
         // 
         // common
         //
@@ -323,7 +332,6 @@ namespace StreetViewer.Interface
 
         private void calculateZoomAndPosition()
         {
-
             if (markers.Count == 1)
             {
                 gMap.Position = markers[0].Position;
@@ -350,6 +358,22 @@ namespace StreetViewer.Interface
             gMap.Zoom++;
         }
 
+        private void drawListOfRoutes(List<IList<PointLatLng>> listOfDirections)
+        {
+            gMap.Overlays[1].Routes.Clear();
+            listOfRoutes = new List<GMapRoute>();
+            foreach (List<PointLatLng> points in listOfDirections)
+            {
+                route = new GMapRoute("Test route");
+                route.Stroke = new Pen(Color.Red, 2);
+                route.Points.AddRange(points);
+                listOfRoutes.Add(route);
+                gMap.Overlays[1].Routes.Add(route);
+            }
+            gMap.Refresh();
+            gMap.Zoom--;
+            gMap.Zoom++;
+        }
         private IList<PointLatLng> getListOfPoinLatLng(IList<Location> locations)
         {
             List<PointLatLng> points = new List<PointLatLng>();
