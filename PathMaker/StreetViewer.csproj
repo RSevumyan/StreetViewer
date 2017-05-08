@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="Core\Controller.cs" />
     <Compile Include="Core\Parameters.cs" />
+    <Compile Include="Interface\GMapForm.cs" />
     <Compile Include="JsonObjects\GoogleApiJson\Common\BoundsJson.cs" />
     <Compile Include="JsonObjects\GoogleApiJson\Common\TextValueJson.cs" />
     <Compile Include="JsonObjects\GoogleApiJson\Direction\DirectionsGeocodedWayPointJson.cs" />

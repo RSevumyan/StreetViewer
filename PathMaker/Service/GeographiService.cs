@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 
 using StreetViewer.JsonObjects.GoogleApiJson.Common;
+using StreetViewer.JsonObjects.OverpassApiJson;
 
 namespace StreetViewer.Service
 {
@@ -94,6 +95,125 @@ namespace StreetViewer.Service
             double term2 = Math.Cos(start.Lat) * Math.Cos(end.Lat) * Math.Pow(Math.Sin(deltaLng / 2), 2);
             double sigma = 2 * Math.Asin(Math.Sqrt(term1+ term2));
             return EARTH_RADIUS * sigma;
+        }
+
+        public List<List<Location>> getAllDirectionsFromGeoJson(GeoJson geoJson)
+        {
+            Dictionary<long, Element> ways = new Dictionary<long, Element>();
+            Dictionary<long, Element> nodes = new Dictionary<long, Element>();
+            foreach (Element elem in geoJson.Elements)
+            {
+                if (elem.Type == "way")
+                {
+                    ways.Add(elem.Id, elem);
+                }
+                else if (elem.Type == "node")
+                {
+                    nodes.Add(elem.Id, elem);
+                }
+            }
+
+            List<List<long>> combinedWays = combineWays(ways);
+
+            List<List<Location>> formattedWays = new List<List<Location>>();
+
+            foreach (List<long> way in combinedWays)
+            {
+                List<Location> locations = new List<Location>();
+                foreach (long nodeId in way)
+                {
+                    locations.Add(new Location(nodes[nodeId].Lat, nodes[nodeId].Lon));
+                }
+                formattedWays.Add(locations);
+            }
+            return formattedWays;
+        }
+
+        // ==============================================================================================================
+        // = Implementation
+        // ==============================================================================================================
+
+        private List<List<long>> combineWays(Dictionary<long, Element> ways)
+        {
+            Dictionary<string, List<Element>> preCombinedWays = new Dictionary<string, List<Element>>();
+            foreach (Element way in ways.Values)
+            {
+                if (!String.IsNullOrEmpty(way.Tags.Name))
+                {
+                    if (preCombinedWays.ContainsKey(way.Tags.Name))
+                    {
+                        addElementToWay(preCombinedWays[way.Tags.Name], way);
+                    }
+                    else
+                    {
+                        preCombinedWays.Add(way.Tags.Name, new List<Element>());
+                        addElementToWay(preCombinedWays[way.Tags.Name], way);
+                    }
+                }
+            }
+
+            List<List<long>> list = new List<List<long>>();
+            foreach (List<Element> elemList in preCombinedWays.Values)
+            {
+                int index = 0;
+                while (index < elemList.Count - 1)
+                {
+                    List<long> localList = new List<long>();
+                    do
+                    {
+                        localList.AddRange(elemList[index].Nodes);
+                        index++;
+                    } while (index < elemList.Count && localList[localList.Count - 1] == elemList[index].Nodes[0]);
+                    list.Add(localList);
+                }
+            }
+            return list;
+        }
+
+        private void addElementToWay(List<Element> way, Element partWay)
+        {
+            int prev = way.FindIndex(elem => elem.Nodes[elem.Nodes.Length - 1] == partWay.Nodes[0]);
+            int next = way.FindIndex(elem => elem.Nodes[0] == partWay.Nodes[partWay.Nodes.Length - 1]);
+            if (prev == -1 && next == -1)
+            {
+                way.Add(partWay);
+            }
+            else if (prev != -1 && next == -1)
+            {
+                way.Insert(prev + 1, partWay);
+            }
+            else if (prev == -1 && next != -1)
+            {
+                way.Insert(next, partWay);
+            }
+            else if (prev != -1 && next != -1)
+            {
+                if (prev < next)
+                {
+                    for (int i = way.Count - 1; i >= next; i--)
+                    {
+                        Element elem = way[way.Count - 1];
+                        way.RemoveAt(way.Count - 1);
+                        way.Insert(prev + 1, elem);
+                    }
+                    way.Insert(prev + 1, partWay);
+                }
+                else if (prev > next)
+                {
+                    int index = prev;
+                    while (index > 0 && way[index].Nodes[0] == way[index - 1].Nodes[way[index - 1].Nodes.Length - 1])
+                    {
+                        index--;
+                    }
+                    for (int i = prev; i >= index; i--)
+                    {
+                        Element elem = way[prev];
+                        way.RemoveAt(prev);
+                        way.Insert(next, elem);
+                    }
+                    way.Insert(next + 1, partWay);
+                }
+            }
         }
     }
 }

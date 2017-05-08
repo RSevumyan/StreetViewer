@@ -22,10 +22,16 @@ namespace StreetViewer.Core
         private GeographiService geoService;
         private OverpassRestService overpassService;
 
+        internal Parameters Parameters
+        {
+            get { return parameters; }
+            set { parameters = value; }
+        }
+
         public Controller()
         {
-            googleService = new GoogleRestService();
             parameters = new Parameters();
+            googleService = new GoogleRestService();
             geoService = new GeographiService();
             overpassService = new OverpassRestService();
         }
@@ -67,126 +73,10 @@ namespace StreetViewer.Core
             return downloader;
         }
 
-        public void setParams(int order, int radius)
-        {
-            parameters.Order = order;
-            parameters.Radius = radius;
-        }
-
         public List<List<Location>> getAllDirectionsOfArea(string lat, string lng)
         {
             GeoJson geoJson = overpassService.getWaysOfArea(parameters.Radius.ToString(), lat, lng);
-            Dictionary<long, Element> ways = new Dictionary<long, Element>();
-            Dictionary<long, Element> nodes = new Dictionary<long, Element>();
-            foreach (Element elem in geoJson.Elements)
-            {
-                if (elem.Type == "way")
-                {
-                    ways.Add(elem.Id, elem);
-                }
-                else if (elem.Type == "node")
-                {
-                    nodes.Add(elem.Id, elem);
-                }
-            }
-
-            List<List<long>> combinedWays = combineWays(ways);
-
-            List<List<Location>> formattedWays = new List<List<Location>>();
-
-            foreach (List<long> way in combinedWays)
-            {
-                List<Location> locations = new List<Location>();
-                foreach (long nodeId in way)
-                {
-                    locations.Add(new Location(nodes[nodeId].Lat, nodes[nodeId].Lon));
-                }
-                formattedWays.Add(locations);
-            }
-            return formattedWays;
-        }
-
-        private List<List<long>> combineWays(Dictionary<long, Element> ways)
-        {
-            Dictionary<string, List<Element>> preCombinedWays = new Dictionary<string, List<Element>>();
-            foreach (Element way in ways.Values)
-            {
-                if (!String.IsNullOrEmpty(way.Tags.Name))
-                {
-                    if (preCombinedWays.ContainsKey(way.Tags.Name))
-                    {
-                        addElementToWay(preCombinedWays[way.Tags.Name], way);
-                    }
-                    else
-                    {
-                        preCombinedWays.Add(way.Tags.Name, new List<Element>());
-                        addElementToWay(preCombinedWays[way.Tags.Name], way);
-                    }
-                }
-            }
-
-            List<List<long>> list = new List<List<long>>();
-            foreach (List<Element> elemList in preCombinedWays.Values)
-            {
-                int index = 0;
-                while (index < elemList.Count - 1)
-                {
-                    List<long> localList = new List<long>();
-                    do
-                    {
-                        localList.AddRange(elemList[index].Nodes);
-                        index++;
-                    } while (index < elemList.Count && localList[localList.Count - 1] == elemList[index].Nodes[0]);
-                    list.Add(localList);
-                }
-            }
-            return list;
-        }
-
-        private void addElementToWay(List<Element> way, Element partWay)
-        {
-            int prev = way.FindIndex(elem => elem.Nodes[elem.Nodes.Length - 1] == partWay.Nodes[0]);
-            int next = way.FindIndex(elem => elem.Nodes[0] == partWay.Nodes[partWay.Nodes.Length - 1]);
-            if (prev == -1 && next == -1)
-            {
-                way.Add(partWay);
-            }
-            else if (prev != -1 && next == -1)
-            {
-                way.Insert(prev + 1, partWay);
-            }
-            else if (prev == -1 && next != -1)
-            {
-                way.Insert(next, partWay);
-            }
-            else if (prev != -1 && next != -1)
-            {
-                if (prev < next)
-                {
-                    for (int i = way.Count - 1; i >= next; i--)
-                    {
-                        Element elem = way[way.Count - 1];
-                        way.RemoveAt(way.Count - 1);
-                        way.Insert(prev + 1, elem);
-                    }
-                    way.Insert(prev + 1, partWay);
-                }
-                else if (prev > next)
-                {
-                    int index = prev;
-                    while (way[index].Nodes[0] == way[index - 1].Nodes[way[index - 1].Nodes.Length - 1])
-                    {
-                        index--;
-                    }
-                    for (int i = prev; i >= index; i--)
-                    {
-                        Element elem = way[prev];
-                        way.RemoveAt(prev);
-                        way.Insert(next, elem);
-                    }
-                    way.Insert(next + 1, partWay);
-                }
-            }
+            return geoService.getAllDirectionsFromGeoJson(geoJson);
         }
     }
 }

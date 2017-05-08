@@ -21,10 +21,6 @@ namespace StreetViewer.Service
 
         private const int BYTES_LENGTH = 2048;
 
-        public GoogleRestService()
-        {
-        }
-
         public GeocodeJsonReply getGeocoding(String place)
         {
             HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(String.Format(GEOCODING_URL_FORMAT, place, GOOGLE_API_KEY));
