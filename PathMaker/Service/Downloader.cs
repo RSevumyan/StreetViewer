@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 
 using StreetViewer.JsonObjects.GoogleApiJson.Common;
+using StreetViewer.JsonObjects.GoogleApiJson.Geocoding;
 using StreetViewer.Service;
 
 namespace StreetViewer.Service
@@ -38,7 +39,7 @@ namespace StreetViewer.Service
             int count = 0;
             for (int i = 0; i < listOfPoints.Count; i++)
             {
-                string localPath = path + "\\" + i + 1;
+                string localPath = path + "\\" + getStreetName(listOfPoints[i][0]) + ";" + getStreetName(listOfPoints[i][listOfPoints[i].Count - 1]);
                 createDirectory(localPath);
                 for (int j = 0; j < listOfPoints[i].Count; j++)
                 {
@@ -68,7 +69,7 @@ namespace StreetViewer.Service
                 }
                 logDirectionCoordinates(listOfPoints[i], localPath);
             }
-           
+
         }
 
         // ==============================================================================================================
@@ -115,6 +116,28 @@ namespace StreetViewer.Service
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
+            }
+        }
+
+        private string getStreetName(Location location)
+        {
+            string lat = location.Lat.ToString();
+            string lng = location.Lng.ToString();
+            try
+            {
+                GeocodeJsonReply geoCoding = restService.getGeocoding(lat, lng);
+                if ("ZERO_RESULTS".Equals(geoCoding.Status))
+                {
+                    return lat + ";" + lng;
+                }
+                else
+                {
+                    return geoCoding.Results[0].AddressComponents.First(address => address.Types[0].Equals("route")).LongName;
+                }
+            }
+            catch (WebException ex)
+            {
+                return lat + ";" + lng;
             }
         }
     }

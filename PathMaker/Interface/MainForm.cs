@@ -138,39 +138,20 @@ namespace StreetViewer.Interface
         //
         private void streetViewsRequestButton_Click(object sender, EventArgs e)
         {
+            List<List<Location>> list = new List<List<Location>>();
             streetVewsFolderDialog.SelectedPath = AppDomain.CurrentDomain.BaseDirectory;
             try
             {
                 if (streetVewsFolderDialog.ShowDialog() == DialogResult.OK)
                 {
-                    resultLabel.Text = RESULTLABEL_STREETVIEWS_DOWNLOADING;
+                    if (gMap.Overlays[0].Routes[0].Points.Count > 0)
+                    {
+                        List<Location> points = getListOfLocation(gMap.Overlays[0].Routes[0].Points);
+                        list.Add(points);
+                    }
+                   
                     string path = streetVewsFolderDialog.SelectedPath + "\\";
 
-                    List<Location> points = getListOfLocation(gMap.Overlays[0].Routes[0].Points);
-                    if (string.IsNullOrEmpty(startStreet.Text))
-                    {
-                        path += points[0].Lat + "_" + points[0].Lng + ";";
-                    }
-                    else
-                    {
-                        string startPath = Regex.Replace(startStreet.Text, @"[$""#+\\|/<>?{}&%*]", "");
-                        startPath = Regex.Replace(startPath, @"\s", "_");
-                        path += startPath + ";";
-                    }
-
-                    if (string.IsNullOrEmpty(endStreet.Text))
-                    {
-                        path += points[points.Count - 1].Lat + "_" + points[points.Count - 1].Lng;
-                    }
-                    else
-                    {
-                        string endPath = Regex.Replace(endStreet.Text, @"[$""#+\\|/<>?{}&%*]", "");
-                        endPath = Regex.Replace(endPath, @"\s", "_");
-                        path += endPath;
-                    }
-
-                    List<List<Location>> list = new List<List<Location>>();
-                    list.Add(points);
                     foreach (GMapRoute route in gMapForm.ListOfRoutes)
                     {
                         list.Add(getListOfLocation(route.Points));

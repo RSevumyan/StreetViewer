@@ -70,6 +70,7 @@
     <Compile Include="JsonObjects\GoogleApiJson\Direction\DirectionsRouteJson.cs" />
     <Compile Include="JsonObjects\GoogleApiJson\Direction\DirectionsStatusJson.cs" />
     <Compile Include="JsonObjects\GoogleApiJson\Direction\DirectionsStepJson.cs" />
+    <Compile Include="JsonObjects\GoogleApiJson\Geocoding\AddressComponents.cs" />
     <Compile Include="JsonObjects\GoogleApiJson\Geocoding\GeocodeJsonReply.cs" />
     <Compile Include="JsonObjects\GoogleApiJson\Geocoding\Geometry.cs" />
     <Compile Include="JsonObjects\GoogleApiJson\Geocoding\JsonAddress.cs" />

@@ -18,12 +18,23 @@ namespace StreetViewer.Service
         private const String GEOCODING_URL_FORMAT = "https://maps.googleapis.com/maps/api/geocode/json?address={0}&key={1}";
         private const String DIRECTION_URL_FORMAT = "https://maps.googleapis.com/maps/api/directions/json?origin={0}&destination={1}&mode=driving&key={2}";
         private const String STREET_VIEW_URL_FORMAT = "https://maps.googleapis.com/maps/api/streetview?size=640x640&location={0},{1}&heading={2}&pitch=-0.76&key={3}";
+        private const String GEOCODING_REVERS_URL_FORMAT = "https://maps.googleapis.com/maps/api/geocode/json?latlng={0}&key={1}";
 
         private const int BYTES_LENGTH = 2048;
 
         public GeocodeJsonReply getGeocoding(String place)
         {
             HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(String.Format(GEOCODING_URL_FORMAT, place, GOOGLE_API_KEY));
+            HttpWebResponse response = reques.GetResponse() as HttpWebResponse;
+            DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(GeocodeJsonReply));
+            object objResponse = jsonSerializer.ReadObject(response.GetResponseStream());
+            return objResponse as GeocodeJsonReply;
+        }
+
+        public GeocodeJsonReply getGeocoding(string lat, string lng)
+        {
+            string place = lat.Replace(",", ".")+"," + lng.Replace(",", ".");
+            HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(String.Format(GEOCODING_REVERS_URL_FORMAT, place, GOOGLE_API_KEY));
             HttpWebResponse response = reques.GetResponse() as HttpWebResponse;
             DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(GeocodeJsonReply));
             object objResponse = jsonSerializer.ReadObject(response.GetResponseStream());
