@@ -19,6 +19,6 @@ This programm allows:
 * Get street views of all streets in the region.
 
 Programm uses:
-* Google Map API for getting coordinated of path
+* Google Direction API for getting coordinates of path
 * Overpass Turbo API for getting coordinates of streets in area
 * Google StreetView API for getting street views.
