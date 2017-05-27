@@ -39,6 +39,9 @@ namespace StreetViewer.Interface
         private GMapForm gMapForm;
         private Parameters parameters;
 
+        /// <summary>
+        /// Стандартный конструктор.
+        /// </summary>
         public MainForm()
         {
             InitializeComponent();

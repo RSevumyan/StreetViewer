@@ -9,10 +9,18 @@ using StreetViewer.Core;
 
 namespace StreetViewer.Service
 {
+    /// <summary>
+    /// Сервис работы с географическими данными.
+    /// </summary>
     public class GeographiService
     {
         private const int EARTH_RADIUS = 6371;
 
+        /// <summary>
+        /// Декодировать строку полилинии в список координат.
+        /// </summary>
+        /// <param name="encodedPoints">строка полилинии</param>
+        /// <returns>Список координат</returns>
         public IList<Location> decodePolyline(string encodedPoints)
         {
             int orderParam = Parameters.Instance.Order;
@@ -73,6 +81,12 @@ namespace StreetViewer.Service
             return locationList;
         }
 
+        /// <summary>
+        /// Получить расстояние между двумя географическими точками.
+        /// </summary>
+        /// <param name="start">Начальная географическая точка</param>
+        /// <param name="end">Конечная географическая точка</param>
+        /// <returns>Расстояние</returns>
         public double getDistanceByCoordinates(Location start, Location end)
         {
             double deltaLat = start.Lat - end.Lat;
@@ -83,6 +97,11 @@ namespace StreetViewer.Service
             return EARTH_RADIUS * sigma;
         }
 
+        /// <summary>
+        /// Получить список путей из geoJson
+        /// </summary>
+        /// <param name="geoJson">geoJson, в котором содержиться информация по путям в области</param>
+        /// <returns>Список путей (список списков географических точек)</returns>
         public List<List<Location>> getAllDirectionsFromGeoJson(GeoJson geoJson)
         {
             Dictionary<long, Element> ways = new Dictionary<long, Element>();

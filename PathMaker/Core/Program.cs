@@ -6,10 +6,13 @@ using StreetViewer.Interface;
 
 namespace StreetViewer.Core
 {
+    /// <summary>
+    /// MainClass приложения.
+    /// </summary>
     static class Program
     {
         /// <summary>
-        /// The main entry point for the application.
+        /// Метод Main.
         /// </summary>
         [STAThread]
         static void Main()

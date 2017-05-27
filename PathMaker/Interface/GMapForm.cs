@@ -13,30 +13,30 @@ using GMap.NET.ObjectModel;
 
 namespace StreetViewer.Interface
 {
-    class GMapForm
+    internal class GMapForm
     {
         private ObservableCollection<GMapMarker> markers;
         private GMapRoute route;
         private List<GMapRoute> listOfRoutes;
         private GMapControl gMap;
 
-        public ObservableCollection<GMapMarker> Markers
+        internal ObservableCollection<GMapMarker> Markers
         {
             get { return markers; }
             set { markers = value; }
         }
-        public GMapRoute Route
+        internal GMapRoute Route
         {
             get { return route; }
             set { route = value; }
         }
-        public List<GMapRoute> ListOfRoutes
+        internal List<GMapRoute> ListOfRoutes
         {
             get { return listOfRoutes; }
             set { listOfRoutes = value; }
         }
 
-        public GMapForm(GMapControl gMap)
+        internal GMapForm(GMapControl gMap)
         {
             this.gMap = gMap;
             gMap.MapProvider = GoogleMapProvider.Instance;
@@ -61,7 +61,7 @@ namespace StreetViewer.Interface
             listOfRoutes = new List<GMapRoute>();
         }
 
-        public void calculateZoomAndPosition()
+        internal void calculateZoomAndPosition()
         {
             if (markers.Count == 1)
             {
@@ -80,7 +80,7 @@ namespace StreetViewer.Interface
             }
         }
 
-        public void drawRoute(IList<PointLatLng> points)
+        internal void drawRoute(IList<PointLatLng> points)
         {
             route.Points.Clear();
             route.Points.AddRange(points);
@@ -89,7 +89,7 @@ namespace StreetViewer.Interface
             gMap.Zoom++;
         }
 
-        public void drawListOfRoutes(List<IList<PointLatLng>> listOfDirections)
+        internal void drawListOfRoutes(List<IList<PointLatLng>> listOfDirections)
         {
             gMap.Overlays[1].Routes.Clear();
             listOfRoutes = new List<GMapRoute>();
@@ -106,7 +106,7 @@ namespace StreetViewer.Interface
             gMap.Zoom++;
         }
 
-        public void addMarkerByKeyUp(PointLatLng position, bool isStartMarker)
+        internal void addMarkerByKeyUp(PointLatLng position, bool isStartMarker)
         {
             if (markers.Count == 0)
             {
@@ -144,7 +144,7 @@ namespace StreetViewer.Interface
             }
         }
 
-        public void mouseDoubleClick(MouseEventArgs e)
+        internal void mouseDoubleClick(MouseEventArgs e)
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
             {
@@ -157,7 +157,7 @@ namespace StreetViewer.Interface
             }
         }
 
-        public void onMarkerClick(GMapMarker item)
+        internal void onMarkerClick(GMapMarker item)
         {
             route.Clear();
             markers.Remove(item);

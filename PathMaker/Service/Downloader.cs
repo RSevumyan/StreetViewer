@@ -11,7 +11,10 @@ using StreetViewer.Service;
 
 namespace StreetViewer.Service
 {
-    class Downloader
+    /// <summary>
+    /// Класс загрузки панорам снимков в отдельном потоке.
+    /// </summary>
+    public class Downloader
     {
         private int status;
         private string path;
@@ -19,12 +22,21 @@ namespace StreetViewer.Service
         private int pointsCount;
         private GoogleRestService restService;
 
+        /// <summary>
+        /// Процент загруженных панорам от общего количества.
+        /// </summary>
         public int Status
         {
             get { return status; }
             set { status = value; }
         }
 
+        /// <summary>
+        /// Стандартный конструктор.
+        /// </summary>
+        /// <param name="path">директория, в которой будут создаваться папки с панорамами</param>
+        /// <param name="points">Список списков точек, по которым будут загружаться панорамы</param>
+        /// <param name="restService">сервис работы с Google Map API</param>
         public Downloader(string path, List<List<Location>> points, GoogleRestService restService)
         {
             this.path = path;
@@ -34,6 +46,9 @@ namespace StreetViewer.Service
             this.Status = 0;
         }
 
+        /// <summary>
+        /// Загрузить панорамы путей.
+        /// </summary>
         public void downloadStreetViews()
         {
             int count = 0;
