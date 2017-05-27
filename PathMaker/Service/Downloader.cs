@@ -68,8 +68,7 @@ namespace StreetViewer.Service
                     }
                 }
                 logDirectionCoordinates(listOfPoints[i], localPath);
-            }
-
+            } 
         }
 
         // ==============================================================================================================
@@ -106,7 +105,7 @@ namespace StreetViewer.Service
             StreamWriter streamWriter = new StreamWriter(path + "\\coordinates.txt");
             for (int i = 0; i < points.Count; i++)
             {
-                streamWriter.WriteLine(points[i].Lat + ";\t" + points[i].Lng + "\r\n");
+                streamWriter.WriteLine(i+"\t\t"+points[i].Lat + ";\t\t" + points[i].Lng + "\r\n");
             }
             streamWriter.Close();
         }

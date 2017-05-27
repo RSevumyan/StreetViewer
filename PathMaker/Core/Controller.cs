@@ -17,20 +17,12 @@ namespace StreetViewer.Core
 {
     class Controller
     {
-        private Parameters parameters;
         private GoogleRestService googleService;
         private GeographiService geoService;
         private OverpassRestService overpassService;
 
-        internal Parameters Parameters
-        {
-            get { return parameters; }
-            set { parameters = value; }
-        }
-
         public Controller()
         {
-            parameters = new Parameters();
             googleService = new GoogleRestService();
             geoService = new GeographiService();
             overpassService = new OverpassRestService();
@@ -61,7 +53,7 @@ namespace StreetViewer.Core
             }
             else
             {
-                return geoService.decodePolyline(json.Routes[0].OverviewPolyline.Points, parameters.Order);
+                return geoService.decodePolyline(json.Routes[0].OverviewPolyline.Points);
             }
         }
 
@@ -75,7 +67,7 @@ namespace StreetViewer.Core
 
         public List<List<Location>> getAllDirectionsOfArea(string lat, string lng)
         {
-            GeoJson geoJson = overpassService.getWaysOfArea(parameters.Radius.ToString(), lat, lng);
+            GeoJson geoJson = overpassService.getWaysOfArea(lat, lng);
             return geoService.getAllDirectionsFromGeoJson(geoJson);
         }
     }

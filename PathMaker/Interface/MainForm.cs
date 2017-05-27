@@ -37,15 +37,17 @@ namespace StreetViewer.Interface
         private Controller controller;
         private Downloader downloader;
         private GMapForm gMapForm;
+        private Parameters parameters;
 
         public MainForm()
         {
             InitializeComponent();
             controller = new Controller();
+            parameters = Parameters.Instance;
             setToolTipProperties(toolTip1);
             setToolTipProperties(toolTip2);
-            orderInput.Value = controller.Parameters.Order;
-            radiusUpDown.Value = controller.Parameters.Radius;
+            orderInput.Value = parameters.Order;
+            radiusUpDown.Value = parameters.Radius;
         }
 
         // ==============================================================================================================
@@ -176,12 +178,12 @@ namespace StreetViewer.Interface
         {
             if (orderInput.Value != 0)
             {
-                controller.Parameters.Order = (int)orderInput.Value;
+                parameters.Order = (int)orderInput.Value;
             }
 
             if (radiusUpDown.Value != 0)
             {
-                controller.Parameters.Radius = (int)radiusUpDown.Value;
+                parameters.Radius = (int)radiusUpDown.Value;
             }
         }
 

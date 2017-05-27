@@ -6,6 +6,7 @@ using System.Net;
 using System.Runtime.Serialization.Json;
 
 using StreetViewer.JsonObjects.OverpassApiJson;
+using StreetViewer.Core;
 
 namespace StreetViewer.Service
 {
@@ -14,8 +15,9 @@ namespace StreetViewer.Service
         private const string OVERPASS_WAYS_FROM_AREA_QUERY = "[out:json];way(around:{0},{1},{2})[\"highway\"~\"motorway|trunk|primary|motorway_link|trunk_link|primary_link|secondary|tertiary|unclassified\"];(._;>;);out;";
         private const string OVERPASS_REQUEST = "http://overpass-api.de//api/interpreter?data={0}";
 
-        public GeoJson getWaysOfArea(string radius, string lat, string lng)
+        public GeoJson getWaysOfArea(string lat, string lng)
         {
+            string radius = Parameters.Instance.Radius.ToString();
             string query = String.Format(OVERPASS_WAYS_FROM_AREA_QUERY, radius, lat, lng);
             string request = String.Format(OVERPASS_REQUEST, query);
             HttpWebRequest reques = (HttpWebRequest)HttpWebRequest.Create(request);

@@ -5,6 +5,7 @@ using System.Text;
 
 using StreetViewer.JsonObjects.GoogleApiJson.Common;
 using StreetViewer.JsonObjects.OverpassApiJson;
+using StreetViewer.Core;
 
 namespace StreetViewer.Service
 {
@@ -12,9 +13,11 @@ namespace StreetViewer.Service
     {
         private const int EARTH_RADIUS = 6371;
 
-        public IList<Location> decodePolyline(string encodedPoints, int orderParam)
+        public IList<Location> decodePolyline(string encodedPoints)
         {
-            IList<Location> locationList = new List<Location>();
+            int orderParam = Parameters.Instance.Order;
+
+            List<Location> locationList = new List<Location>();
 
             if (string.IsNullOrEmpty(encodedPoints))
                 throw new ArgumentNullException("encodedPoints");
@@ -59,30 +62,13 @@ namespace StreetViewer.Service
                 currentLng += (sum & 1) == 1 ? ~(sum >> 1) : (sum >> 1);
                 double lat = Convert.ToDouble(currentLat) / 1E5;
                 double lng = Convert.ToDouble(currentLng) / 1E5;
+                Location newLocation = new Location(lat, lng);
 
                 if (locationList.Any())
                 {
-                    double height = (lat - locationList[locationList.Count - 1].Lat) * 100000;
-                    double width = (lng - locationList[locationList.Count - 1].Lng) * 100000;
-                    double distance = getDistanceByCoordinates(locationList[locationList.Count - 1], new Location(lat,lng));
-
-
-                    if (distance > orderParam)
-                    {
-                        int order = (int)distance / orderParam;
-                        double latStep = height / (order + 1) / 100000;
-                        double lngStep = width / (order + 1) / 100000;
-
-                        for (int i = 0; i < order; i++)
-                        {
-                            double newLat = locationList[locationList.Count - 1].Lat + latStep;
-                            double newLng = locationList[locationList.Count - 1].Lng + lngStep;
-                            locationList.Add(new Location(newLat, newLng));
-                        }
-                    }
+                    locationList.AddRange(getIntermediateLocations(locationList[locationList.Count - 1], newLocation));
                 }
-                locationList.Add(new Location(lat, lng));
-
+                locationList.Add(newLocation);
             }
             return locationList;
         }
@@ -91,9 +77,9 @@ namespace StreetViewer.Service
         {
             double deltaLat = start.Lat - end.Lat;
             double deltaLng = start.Lng - end.Lng;
-            double term1 = Math.Pow(Math.Sin(deltaLat/2),2);
+            double term1 = Math.Pow(Math.Sin(deltaLat / 2), 2);
             double term2 = Math.Cos(start.Lat) * Math.Cos(end.Lat) * Math.Pow(Math.Sin(deltaLng / 2), 2);
-            double sigma = 2 * Math.Asin(Math.Sqrt(term1+ term2));
+            double sigma = 2 * Math.Asin(Math.Sqrt(term1 + term2));
             return EARTH_RADIUS * sigma;
         }
 
@@ -122,7 +108,12 @@ namespace StreetViewer.Service
                 List<Location> locations = new List<Location>();
                 foreach (long nodeId in way)
                 {
-                    locations.Add(new Location(nodes[nodeId].Lat, nodes[nodeId].Lon));
+                    Location newLocation = new Location(nodes[nodeId].Lat, nodes[nodeId].Lon);
+                    if (locations.Any())
+                    {
+                        locations.AddRange(getIntermediateLocations(locations[locations.Count - 1], newLocation));
+                    }
+                    locations.Add(newLocation);
                 }
                 formattedWays.Add(locations);
             }
@@ -164,7 +155,7 @@ namespace StreetViewer.Service
                         localList.AddRange(elemList[index].Nodes);
                         index++;
                     } while (index < elemList.Count && localList[localList.Count - 1] == elemList[index].Nodes[0]);
-                    list.Add(localList);
+                    list.Add(localList.Distinct().ToList());
                 }
             }
             return list;
@@ -214,6 +205,32 @@ namespace StreetViewer.Service
                     way.Insert(next + 1, partWay);
                 }
             }
+        }
+
+        private List<Location> getIntermediateLocations(Location start, Location end)
+        {
+            int orderParam = Parameters.Instance.Order;
+            List<Location> locationList = new List<Location>();
+            double height = (end.Lat - start.Lat) * 100000;
+            double width = (end.Lng - start.Lng) * 100000;
+            double distance = getDistanceByCoordinates(start, end);
+            locationList.Add(start);
+
+            if (distance > orderParam)
+            {
+                int order = (int)distance / orderParam;
+                double latStep = height / (order + 1) / 100000;
+                double lngStep = width / (order + 1) / 100000;
+
+                for (int i = 0; i < order; i++)
+                {
+                    double newLat = locationList[locationList.Count - 1].Lat + latStep;
+                    double newLng = locationList[locationList.Count - 1].Lng + lngStep;
+                    locationList.Add(new Location(newLat, newLng));
+                }
+            }
+            locationList.Remove(start);
+            return locationList;
         }
     }
 }
