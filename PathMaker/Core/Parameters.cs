@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace StreetViewer.Core
+namespace PathFinder.Core
 {
     /// <summary>
     /// Класс синглтон, содержащий параметры работы приложения.
@@ -14,6 +14,8 @@ namespace StreetViewer.Core
 
         private int order;
         private int radius;
+        private string pluginsPath;
+        private int pluginNumber;
 
         /// <summary>
         /// Шаг загрузки панорам, в метрах
@@ -31,6 +33,18 @@ namespace StreetViewer.Core
         {
             get { return radius; }
             set { radius = value; }
+        }
+
+        public string PlugnisPath
+        {
+            get { return pluginsPath; }
+            set { pluginsPath = value; }
+        }
+
+        public int PluginNumber
+        {
+            get{ return pluginNumber; }
+            set{ pluginNumber = value; }
         }
 
         private Parameters()

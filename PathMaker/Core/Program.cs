@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using StreetViewer.Interface;
+using PathFinder.Interface;
 
-namespace StreetViewer.Core
+namespace PathFinder.Core
 {
     /// <summary>
     /// MainClass приложения.

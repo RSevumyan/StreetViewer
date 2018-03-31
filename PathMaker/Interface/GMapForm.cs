@@ -10,14 +10,16 @@ using GMap.NET.WindowsForms;
 using GMap.NET.WindowsForms.Markers;
 using GMap.NET.MapProviders;
 using GMap.NET.ObjectModel;
+using PathFinder.StreetViewing;
+using PathFinder.StreetViewing.JsonObjects.GoogleApiJson.Common;
 
-namespace StreetViewer.Interface
+namespace PathFinder.Interface
 {
     internal class GMapForm
     {
         private ObservableCollection<GMapMarker> markers;
-        private GMapRoute route;
-        private List<GMapRoute> listOfRoutes;
+        private EmbededRoute dbRoute;
+        private EmbededRoute addedRoute;
         private GMapControl gMap;
 
         internal ObservableCollection<GMapMarker> Markers
@@ -25,15 +27,10 @@ namespace StreetViewer.Interface
             get { return markers; }
             set { markers = value; }
         }
-        internal GMapRoute Route
+
+        internal IList<PolylineChunk> AddedChunks
         {
-            get { return route; }
-            set { route = value; }
-        }
-        internal List<GMapRoute> ListOfRoutes
-        {
-            get { return listOfRoutes; }
-            set { listOfRoutes = value; }
+            get { return this.addedRoute.GetChunks(); }
         }
 
         internal GMapForm(GMapControl gMap)
@@ -45,23 +42,19 @@ namespace StreetViewer.Interface
             gMap.ShowCenter = false;
             gMap.DragButton = System.Windows.Forms.MouseButtons.Left;
 
-            GMapOverlay directionOverlay = new GMapOverlay("DirectionOverlay");
-            markers = directionOverlay.Markers;
-            route = new GMapRoute("Test route");
-            route.Stroke = new Pen(Color.Red, 2);
-            directionOverlay.Routes.Add(route);
-            gMap.Overlays.Add(directionOverlay);
+            //Preparing overlay for routes from database
+            GMapOverlay historyOverlay = new GMapOverlay("HistoryOverlay");
+            dbRoute = new EmbededRoute(historyOverlay, "Routes in Database", Color.DarkBlue);
+            gMap.Overlays.Add(historyOverlay);
 
-            GMapOverlay allDirectionsOverlay = new GMapOverlay("AllDirectionsOverlay");
-            gMap.Overlays.Add(allDirectionsOverlay);
-
-            GMapOverlay circleOverlay = new GMapOverlay("CircleOverlay");
-            gMap.Overlays.Add(circleOverlay);
-
-            listOfRoutes = new List<GMapRoute>();
+            //Preparing overlay for current session routes
+            GMapOverlay currentOverlay = new GMapOverlay("CurrentSessionOverlay");
+            markers = currentOverlay.Markers;
+            addedRoute = new EmbededRoute(currentOverlay, "New routes", Color.Green);
+            gMap.Overlays.Add(currentOverlay);
         }
 
-        internal void calculateZoomAndPosition()
+        internal void CalculateZoomAndPosition()
         {
             if (markers.Count == 1)
             {
@@ -80,41 +73,40 @@ namespace StreetViewer.Interface
             }
         }
 
-        internal void drawRoute(IList<PointLatLng> points)
+        internal void DrawRoute(IList<PolylineChunk> routeChunks)
         {
-            route.Points.Clear();
-            route.Points.AddRange(points);
-            gMap.Refresh();
-            gMap.Zoom--;
-            gMap.Zoom++;
+            addedRoute.AddChunks(routeChunks);
+            RefreshGMap();
         }
 
-        internal void drawListOfRoutes(List<IList<PointLatLng>> listOfDirections)
+        internal void DrawDbRoute(List<PolylineChunk> routeChunks)
         {
-            gMap.Overlays[1].Routes.Clear();
-            listOfRoutes = new List<GMapRoute>();
-            foreach (List<PointLatLng> points in listOfDirections)
-            {
-                GMapRoute localRoute = new GMapRoute("Test route");
-                localRoute.Stroke = new Pen(Color.Red, 2);
-                localRoute.Points.AddRange(points);
-                listOfRoutes.Add(localRoute);
-                gMap.Overlays[1].Routes.Add(localRoute);
-            }
-            gMap.Refresh();
-            gMap.Zoom--;
-            gMap.Zoom++;
+            dbRoute.AddChunks(routeChunks);
+            RefreshGMap();
         }
 
-        internal void addMarkerByKeyUp(PointLatLng position, bool isStartMarker)
+        internal void ShiftToDbRoute(List<PolylineChunk> chunks)
+        {
+            dbRoute.AddChunks(chunks);
+            addedRoute.RemoveChunks(chunks);
+            RefreshGMap();
+        }
+
+        internal void ClearAddedRoute()
+        {
+            addedRoute.Clear();
+            RefreshGMap();
+        }
+
+        internal void AddMarkerByKeyUp(PointLatLng position, bool isStartMarker)
         {
             if (markers.Count == 0)
             {
-                markers.Add(getStartMarker(position));
+                markers.Add(GetStartMarker(position));
 
                 if (!isStartMarker)
                 {
-                    markers.Add(getEndMarker(position));
+                    markers.Add(GetEndMarker(position));
                     markers[0].IsVisible = false;
                 }
             }
@@ -127,7 +119,7 @@ namespace StreetViewer.Interface
                 }
                 else
                 {
-                    markers.Add(getEndMarker(position));
+                    markers.Add(GetEndMarker(position));
                 }
             }
             else
@@ -144,22 +136,18 @@ namespace StreetViewer.Interface
             }
         }
 
-        internal void mouseDoubleClick(MouseEventArgs e)
+        internal void MouseDoubleClick(MouseEventArgs e)
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
             {
-                route.Clear();
                 double lat = gMap.FromLocalToLatLng(e.X, e.Y).Lat;
                 double lng = gMap.FromLocalToLatLng(e.X, e.Y).Lng;
-                addMarkerByMouseClick(new PointLatLng(lat, lng));
-                gMap.Zoom--;
-                gMap.Zoom++;
+                AddMarkerByMouseClick(new PointLatLng(lat, lng));
             }
         }
 
-        internal void onMarkerClick(GMapMarker item)
+        internal void OnMarkerClick(GMapMarker item)
         {
-            route.Clear();
             markers.Remove(item);
             List<PointLatLng> oldMarkers = new List<PointLatLng>();
             foreach (GMapMarker marker in markers)
@@ -169,21 +157,25 @@ namespace StreetViewer.Interface
             markers.Clear();
             foreach (PointLatLng position in oldMarkers)
             {
-                addMarkerByMouseClick(position);
+                AddMarkerByMouseClick(position);
             }
-            gMap.Zoom--;
-            gMap.Zoom++;
         }
 
         // ==============================================================================================================
         // = Implementation
         // ==============================================================================================================
 
-        private void addMarkerByMouseClick(PointLatLng position)
+        private void RefreshGMap()
+        {
+            gMap.BeginInvoke((MethodInvoker)(() => gMap.Refresh()));
+        }
+
+
+        private void AddMarkerByMouseClick(PointLatLng position)
         {
             if (markers.Count == 0)
             {
-                markers.Add(getStartMarker(position));
+                markers.Add(GetStartMarker(position));
             }
             else
             {
@@ -192,11 +184,11 @@ namespace StreetViewer.Interface
                     int count = markers.Count - 1;
                     markers[count].ToolTipText = "Промежуточная точка № " + count;
                 }
-                markers.Add(getEndMarker(position));
+                markers.Add(GetEndMarker(position));
             }
         }
 
-        private GMapMarker getStartMarker(PointLatLng position)
+        private GMapMarker GetStartMarker(PointLatLng position)
         {
             GMapMarker startMarker = new GMarkerGoogle(position, GMarkerGoogleType.blue);
             startMarker.ToolTipText = "Начальная точка";
@@ -204,11 +196,77 @@ namespace StreetViewer.Interface
         }
 
 
-        private GMapMarker getEndMarker(PointLatLng position)
+        private GMapMarker GetEndMarker(PointLatLng position)
         {
             GMapMarker endMarker = new GMarkerGoogle(position, GMarkerGoogleType.red);
             endMarker.ToolTipText = "Конечная точка";
             return endMarker;
+        }
+
+        internal class EmbededRoute
+        {
+            private string routeDesk;
+            private Color color;
+            List<Tuple<PolylineChunk, GMapRoute>> listOfRoadsPair;
+            private GMapOverlay overlay;
+
+            internal EmbededRoute(GMapOverlay overlay, string routeDesc, Color color)
+            {
+                listOfRoadsPair = new List<Tuple<PolylineChunk, GMapRoute>>();
+                this.routeDesk = routeDesc;
+                this.color = color;
+                this.overlay = overlay;
+            }
+
+            internal IList<PolylineChunk> GetChunks()
+            {
+                return listOfRoadsPair.Select(x => x.Item1).ToList();
+            }
+
+            internal void AddChunks(IList<PolylineChunk> chunks)
+            {
+                foreach (PolylineChunk chunk in chunks)
+                {
+                    GMapRoute route = new GMapRoute(routeDesk);
+                    route.Stroke = new Pen(color, 2);
+                    route.Points.AddRange(GetListOfPoinLatLng(chunk));
+                    overlay.Routes.Add(route);
+                    listOfRoadsPair.Add(new Tuple<PolylineChunk, GMapRoute>(chunk, route));
+                }
+            }
+
+            internal void RemoveChunks(IList<PolylineChunk> chunks)
+            {
+                foreach (PolylineChunk chunk in chunks)
+                {
+                    Tuple<PolylineChunk, GMapRoute> tuple = listOfRoadsPair.Find(x => x.Item1.Equals(chunk));
+                    overlay.Routes.Remove(tuple.Item2);
+                    listOfRoadsPair.Remove(tuple);
+                }
+            }
+
+            internal void Clear()
+            {
+                listOfRoadsPair.Clear();
+                overlay.Routes.Clear();
+            }
+
+            private List<PointLatLng> GetListOfPoinLatLng(PolylineChunk polylineChunks)
+            {
+                List<PointLatLng> points = new List<PointLatLng>();
+                points.AddRange(ConvertToPointLatLng(polylineChunks.LocationEntities));
+                return points;
+            }
+
+            private List<PointLatLng> ConvertToPointLatLng(List<LocationEntity> locations)
+            {
+                List<PointLatLng> list = new List<PointLatLng>();
+                foreach (LocationEntity location in locations)
+                {
+                    list.Add(new PointLatLng(location.Lat, location.Lng));
+                }
+                return list;
+            }
         }
     }
 }
