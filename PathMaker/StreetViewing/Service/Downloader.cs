@@ -49,15 +49,14 @@ namespace PathFinder.StreetViewing.Service
         /// </summary>
         public void DownloadStreetViews()
         {
-            List<PolylineChunk> savedChunks = context.Chunks.AddRange(listOfChunks).ToList();
-            context.SaveChanges();
             int pointsCount = listOfChunks.Sum(chunk => chunk.LocationEntities.Count);
             int count = 0;
-            foreach (PolylineChunk chunk in savedChunks)
+            foreach (PolylineChunk chunk in listOfChunks)
             {
-                string localPath = path + "\\" + chunk.Id;
+                string localPath = path + "\\" + chunk.OverpassId;
                 createDirectory(localPath);
                 DownloadChunkStreetViews(chunk, localPath);
+                context.Chunks.Add(chunk);
                 context.SaveChanges();
                 AddDownloadedChunkToList(chunk);
                 count+= chunk.LocationEntities.Count;
@@ -97,11 +96,11 @@ namespace PathFinder.StreetViewing.Service
                 }
                 try
                 {
-                    //Stream viewStream = restService.GetStreetViewStream(listOfLocations[j].Lat.ToString(), listOfLocations[j].Lng.ToString(), angle.ToString());
+                    Stream viewStream = restService.GetStreetViewStream(listOfLocations[j].Lat.ToString(), listOfLocations[j].Lng.ToString(), angle.ToString());
                     string filePath = path + "\\" + j + ".jpeg";
                     using (var fileStream = File.Create(filePath))
                     {
-                        //viewStream.CopyTo(fileStream);
+                        viewStream.CopyTo(fileStream);
                     }
                     listOfLocations[j].PathToStreetView = filePath;
                 }

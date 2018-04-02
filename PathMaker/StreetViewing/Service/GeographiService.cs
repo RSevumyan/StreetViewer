@@ -83,7 +83,7 @@ namespace PathFinder.StreetViewing.Service
         /// <param name="start">Начальная географическая точка</param>
         /// <param name="end">Конечная географическая точка</param>
         /// <returns>Расстояние</returns>
-        public double GetDistanceByCoordinates(Location start, Location end)
+        public double GetDistanceByCoordinates(LocationEntity start, LocationEntity end)
         {
             double deltaLat = start.Lat - end.Lat;
             double deltaLng = start.Lng - end.Lng;
@@ -110,18 +110,19 @@ namespace PathFinder.StreetViewing.Service
                 }
             }
 
-            foreach(Element way in ways.Values)
+            foreach (Element way in ways.Values)
             {
 
                 PolylineChunk chunk = new PolylineChunk();
-                chunk.Id = way.Id;
+                chunk.OverpassId = way.Id;
                 List<LocationEntity> chunkLocation = new List<LocationEntity>();
-                foreach (long nodeId in way.Nodes)
+                for (int i = 0; i < way.Nodes.Count() - 1; i++)
                 {
-                    LocationEntity location = new LocationEntity(nodes[nodeId].Lat, nodes[nodeId].Lon);
-                    location.Id = nodeId;
-                    chunkLocation.Add(location);
-                    
+                    LocationEntity start = new LocationEntity(nodes[way.Nodes[i]].Lat, nodes[way.Nodes[i]].Lon);
+                    chunkLocation.Add(start);
+                    LocationEntity end = new LocationEntity(nodes[way.Nodes[i+1]].Lat, nodes[way.Nodes[i+1]].Lon);
+                    chunkLocation.AddRange(GetIntermediateLocations(start, end));
+                    chunkLocation.Add(end);
                 }
                 chunk.LocationEntities = chunkLocation;
                 resultChunks.Add(chunk);
@@ -167,10 +168,10 @@ namespace PathFinder.StreetViewing.Service
             return formattedWays;
         }
 
-        public List<Location> GetIntermediateLocations(Location start, Location end)
+        public List<LocationEntity> GetIntermediateLocations(LocationEntity start, LocationEntity end)
         {
             int orderParam = Parameters.Instance.Order;
-            List<Location> locationList = new List<Location>();
+            List<LocationEntity> locationList = new List<LocationEntity>();
             double height = (end.Lat - start.Lat) * 100000;
             double width = (end.Lng - start.Lng) * 100000;
             double distance = GetDistanceByCoordinates(start, end);
@@ -186,7 +187,7 @@ namespace PathFinder.StreetViewing.Service
                 {
                     double newLat = locationList[locationList.Count - 1].Lat + latStep;
                     double newLng = locationList[locationList.Count - 1].Lng + lngStep;
-                    locationList.Add(new Location(newLat, newLng));
+                    locationList.Add(new LocationEntity(newLat, newLng));
                 }
             }
             locationList.Remove(start);

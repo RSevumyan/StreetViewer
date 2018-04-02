@@ -143,19 +143,14 @@ namespace PathFinder.Core
         {
             List<PolylineChunk> areaChunks = new List<PolylineChunk>();
             GeoJson geoJson = overpassService.getWaysOfArea(lat, lng, parameters.Radius);
+            HashSet<long> chunkIdSet = new HashSet<long>(dbContext.Chunks.Select(ch => ch.OverpassId));
             areaChunks.AddRange(geoService.GetPolylineChunksFromGeoJson(geoJson));
+            areaChunks.RemoveAll(ch => chunkIdSet.Contains(ch.OverpassId));
             return areaChunks;
         }
 
         public List<PolylineChunk> LoadExistingChunks()
         {
-            List<PolylineChunk> chunksToDelete = dbContext.LocationEntities.Where(location => location.PathToStreetView == null)
-                .GroupBy(location => location.PolylineChunk)
-                .Select(x => x.Key)
-                .ToList();
-            dbContext.Chunks.RemoveRange(chunksToDelete);
-            dbContext.SaveChanges();
-
             List<PolylineChunk> chunks = new List<PolylineChunk>();
             chunks.AddRange(dbContext.Chunks);
             return chunks;
@@ -174,22 +169,22 @@ namespace PathFinder.Core
             else
             {
                 List<Location> result = geoService.DecodePolyline(json.Routes[0].OverviewPolyline.Points);
-                return PopulatePolylineChunks(result);
+                return PopulatePolylineChunks(LocationEntity.ConvertFromGoogleLocations(result));
             }
 
         }
 
-        private List<PolylineChunk> PopulatePolylineChunks(List<Location> locationsList)
+        private List<PolylineChunk> PopulatePolylineChunks(List<LocationEntity> locationsList)
         {
             List<PolylineChunk> chunkList = new List<PolylineChunk>();
             for (int i = 1; i < locationsList.Count - 2; i++)
             {
-                List<Location> chunkLocationList = new List<Location>();
+                List<LocationEntity> chunkLocationList = new List<LocationEntity>();
 
                 chunkLocationList.Add(locationsList[i]);
                 chunkLocationList.AddRange(geoService.GetIntermediateLocations(locationsList[i], locationsList[i + 1]));
                 chunkLocationList.Add(locationsList[i + 1]);
-                PolylineChunk chunk = new PolylineChunk(LocationEntity.ConvertFromGoogleLocations(chunkLocationList));
+                PolylineChunk chunk = new PolylineChunk(chunkLocationList);
                 chunkList.Add(chunk);
             }
             return chunkList;

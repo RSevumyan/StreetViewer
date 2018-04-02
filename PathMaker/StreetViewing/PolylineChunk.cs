@@ -1,6 +1,7 @@
 ﻿using PathFinder.StreetViewing.JsonObjects.GoogleApiJson.Common;
 
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace PathFinder.StreetViewing
 {
@@ -13,7 +14,10 @@ namespace PathFinder.StreetViewing
             this.LocationEntities = locationList;
         }
 
-        public long Id { get; set; }
+        [Key]
+        public int Id { get; set; }
+
+        public long OverpassId { get; set; }
 
         public virtual List<LocationEntity> LocationEntities { get; set; }
 
@@ -23,6 +27,10 @@ namespace PathFinder.StreetViewing
             if (this.Id > 0 && obj.Id > 0)
             {
                 result = this.Id == obj.Id;
+            }
+            else if (this.OverpassId > 0 && obj.OverpassId > 0)
+            {
+                result = this.OverpassId == obj.OverpassId;
             }
             else if (this.LocationEntities != null && obj.LocationEntities != null && this.LocationEntities.Count == obj.LocationEntities.Count)
             {

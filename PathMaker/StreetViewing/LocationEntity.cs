@@ -32,7 +32,7 @@ namespace PathFinder.StreetViewing
         public string PathToStreetView { get; set; }
 
         [ForeignKey("PolylineChunk")]
-        public long PolylineChunkId { get; set; }
+        public int PolylineChunkId { get; set; }
 
         public virtual PolylineChunk PolylineChunk { get; set; }
 
