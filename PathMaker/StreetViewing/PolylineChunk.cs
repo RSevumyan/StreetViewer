@@ -13,13 +13,16 @@ namespace PathFinder.StreetViewing
         {
             this.LocationEntities = locationList;
         }
-
-        [Key]
+        
         public int Id { get; set; }
 
         public long OverpassId { get; set; }
 
         public virtual List<LocationEntity> LocationEntities { get; set; }
+
+        public virtual List<PolylineChunk> PreviousChunks { get; set; }
+
+        public virtual List<PolylineChunk> NextChunks { get; set; }
 
         public bool Equals(PolylineChunk obj)
         {

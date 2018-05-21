@@ -14,6 +14,7 @@ using System.Reflection;
 using PathFinder.SignDetection;
 using PathFinder.StreetViewing;
 using PathFinder.DataBaseService;
+using CommonDetectorApi;
 
 namespace PathFinder.Core
 {
@@ -26,7 +27,7 @@ namespace PathFinder.Core
         private GeographiService geoService;
         private OverpassRestService overpassService;
         private Downloader downloader;
-        private IList<IDetector> detectors;
+        private DetectorsManager detectorsManager;
         private Parameters parameters;
         private PathFinderContext dbContext;
 
@@ -39,8 +40,7 @@ namespace PathFinder.Core
             geoService = new GeographiService();
             overpassService = new OverpassRestService();
             parameters = Parameters.Instance;
-            //ToDo Доделать загрузку плагинов
-            //detectors = PluginsController.LoadDetectorPlugons(parameters.PlugnisPath);
+            detectorsManager = new DetectorsManager(parameters.PluginsPath);
             dbContext = new PathFinderContext();
         }
 
@@ -133,19 +133,30 @@ namespace PathFinder.Core
             return downloader;
         }
 
+        public BypassService StartDetection(PolylineChunk start, List<string> detectorsNames)
+        {
+            List<IDetector> selectedDetectors = detectorsManager.Detectors.Where(x => detectorsNames.Contains(x.Name)).ToList();
+            BypassService bypassService = new BypassService(googleService, dbContext, selectedDetectors, parameters.StreetViewsPath, start);
+            Thread bypassThread = new Thread(bypassService.Start);
+            bypassThread.Start();
+            return bypassService;
+        }
+
         /// <summary>
         /// Получить все пути по области.
         /// </summary>
         /// <param name="lat">Широта точки центра области запроса.</param>
         /// <param name="lng">Долгота точки центра области запроса.</param>
         /// <returns>Список путей (списков списков координат)</returns>
-        public IList<PolylineChunk> GetAllDirectionsOfArea(double lat, double lng)
+        public List<PolylineChunk> GetAllDirectionsOfArea(double lat, double lng)
         {
             List<PolylineChunk> areaChunks = new List<PolylineChunk>();
             GeoJson geoJson = overpassService.getWaysOfArea(lat, lng, parameters.Radius);
             HashSet<long> chunkIdSet = new HashSet<long>(dbContext.Chunks.Select(ch => ch.OverpassId));
             areaChunks.AddRange(geoService.GetPolylineChunksFromGeoJson(geoJson));
             areaChunks.RemoveAll(ch => chunkIdSet.Contains(ch.OverpassId));
+            dbContext.Chunks.AddRange(areaChunks);
+            dbContext.SaveChanges();
             return areaChunks;
         }
 
@@ -154,6 +165,16 @@ namespace PathFinder.Core
             List<PolylineChunk> chunks = new List<PolylineChunk>();
             chunks.AddRange(dbContext.Chunks);
             return chunks;
+        }
+
+        public List<string> GetDetectorNamesList()
+        {
+            return detectorsManager.Detectors.Select(detector => detector.Name).ToList();
+        }
+
+        public void ReloadDetectorManager()
+        {
+            detectorsManager = new DetectorsManager(parameters.PluginsPath);
         }
 
         // ==============================================================================================================

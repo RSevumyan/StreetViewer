@@ -15,7 +15,7 @@ namespace PathFinder.StreetViewing.Service
     public class OverpassRestService : AbstractRestService
     {
         private const string OVERPASS_WAYS_FROM_AREA_QUERY = "[out:json][timeout:200];way(around:{0},{1},{2})[\"highway\"~\"motorway|trunk|residential|primary|motorway_link|trunk_link|primary_link|secondary|tertiary|unclassified\"];out body;>;out skel;";
-        private const string OVERPASS_REQUEST = "http://overpass-api.de//api/interpreter?data={0}";
+        private const string OVERPASS_REQUEST = "http://overpass.openstreetmap.fr//api/interpreter?data={0}";
         
         /// <summary>
         /// Запрос всех путей по области с ответом в виде GeoJson.

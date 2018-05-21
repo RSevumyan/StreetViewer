@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -11,16 +10,19 @@ using GMap.NET.WindowsForms.Markers;
 using GMap.NET.MapProviders;
 using GMap.NET.ObjectModel;
 using PathFinder.StreetViewing;
-using PathFinder.StreetViewing.JsonObjects.GoogleApiJson.Common;
 
 namespace PathFinder.Interface
 {
     internal class GMapForm
     {
         private ObservableCollection<GMapMarker> markers;
+        private ObservableCollection<GMapMarker> mapMiniMarkers;
         private EmbededRoute dbRoute;
         private EmbededRoute addedRoute;
+        private EmbededRoute mapMiniRoute;
+        private EmbededRoute mapMiniDetectorsRoute;
         private GMapControl gMap;
+        private GMapControl gMapMini;
 
         internal ObservableCollection<GMapMarker> Markers
         {
@@ -33,7 +35,7 @@ namespace PathFinder.Interface
             get { return this.addedRoute.GetChunks(); }
         }
 
-        internal GMapForm(GMapControl gMap)
+        internal GMapForm(GMapControl gMap, GMapControl gMapMini)
         {
             this.gMap = gMap;
             gMap.MapProvider = GoogleMapProvider.Instance;
@@ -52,6 +54,21 @@ namespace PathFinder.Interface
             markers = currentOverlay.Markers;
             addedRoute = new EmbededRoute(currentOverlay, "New routes", Color.Green);
             gMap.Overlays.Add(currentOverlay);
+
+            this.gMapMini = gMapMini;
+            gMapMini.MapProvider = GoogleMapProvider.Instance;
+            gMapMini.SetPositionByKeywords("Moscow, Russia");
+            gMapMini.ShowCenter = false;
+            gMapMini.DragButton = System.Windows.Forms.MouseButtons.Left;
+
+            GMapOverlay gmapMiniOverlay = new GMapOverlay("GmapMiniOverlay");
+            mapMiniMarkers = gmapMiniOverlay.Markers;
+            mapMiniRoute = new EmbededRoute(gmapMiniOverlay, "Routes in Database", Color.Green);
+            gMapMini.Overlays.Add(gmapMiniOverlay);
+
+            GMapOverlay gmapMiniDetectorOverlay = new GMapOverlay("GmapMiniDetectorOverlay");
+            mapMiniDetectorsRoute = new EmbededRoute(gmapMiniDetectorOverlay, "Routes in detection", Color.Aqua);
+            gMapMini.Overlays.Add(gmapMiniDetectorOverlay);
         }
 
         internal void CalculateZoomAndPosition()
@@ -82,6 +99,7 @@ namespace PathFinder.Interface
         internal void DrawDbRoute(List<PolylineChunk> routeChunks)
         {
             dbRoute.AddChunks(routeChunks);
+            mapMiniRoute.AddChunks(routeChunks);
             RefreshGMap();
         }
 
@@ -90,6 +108,13 @@ namespace PathFinder.Interface
             dbRoute.AddChunks(chunks);
             addedRoute.RemoveChunks(chunks);
             RefreshGMap();
+        }
+
+        internal void ShiftToDetectedRoute(List<PolylineChunk> chunks)
+        {
+            mapMiniDetectorsRoute.AddChunks(chunks);
+            mapMiniRoute.RemoveChunks(chunks);
+            RefreshGMapMini();
         }
 
         internal void ClearAddedRoute()
@@ -142,8 +167,45 @@ namespace PathFinder.Interface
             {
                 double lat = gMap.FromLocalToLatLng(e.X, e.Y).Lat;
                 double lng = gMap.FromLocalToLatLng(e.X, e.Y).Lng;
-                AddMarkerByMouseClick(new PointLatLng(lat, lng));
+                AddMarkerByMouseClick(markers, new PointLatLng(lat, lng));
             }
+        }
+
+        internal void MapMiniMouseDoubleClick(MouseEventArgs e)
+        {
+            mapMiniDetectorsRoute.Clear();
+            PointLatLng gMapClickLocation = gMapMini.FromLocalToLatLng(e.X, e.Y);
+            LocationEntity clickLocation = new LocationEntity(gMapClickLocation.Lat, gMapClickLocation.Lng);
+            int nearestChunkId = 0;
+            double minimum = 100;
+            for (int i = 0; i < mapMiniRoute.GetChunks().Count; i++)
+            {
+                List<LocationEntity> chunkLocations = mapMiniRoute.GetChunks()[i].LocationEntities;
+                if(chunkLocations.Count > 0)
+                {
+                    bool isCanBeChanged = true;
+                    LocationEntity location = chunkLocations[0];
+                    double delta = Math.Abs(clickLocation.Lat - location.Lat) + Math.Abs(clickLocation.Lng - location.Lng);
+                    isCanBeChanged = delta / minimum < 2;
+                    if (delta > minimum && isCanBeChanged)
+                    {
+                        location = chunkLocations[chunkLocations.Count - 1];
+                        delta = Math.Abs(clickLocation.Lat - location.Lat) + Math.Abs(clickLocation.Lng - location.Lng);
+                    }
+
+                    if (delta < minimum)
+                    {
+                        minimum = delta;
+                        nearestChunkId = i;
+                    }
+                }
+             }
+            mapMiniDetectorsRoute.AddChunk(mapMiniRoute.GetChunks()[nearestChunkId]);
+        }
+
+        internal PolylineChunk GetDetectorsStartChunk()
+        {
+            return mapMiniDetectorsRoute.GetChunks()[0];
         }
 
         internal void OnMarkerClick(GMapMarker item)
@@ -157,7 +219,7 @@ namespace PathFinder.Interface
             markers.Clear();
             foreach (PointLatLng position in oldMarkers)
             {
-                AddMarkerByMouseClick(position);
+                AddMarkerByMouseClick(markers, position);
             }
         }
 
@@ -170,8 +232,12 @@ namespace PathFinder.Interface
             gMap.BeginInvoke((MethodInvoker)(() => gMap.Refresh()));
         }
 
+        private void RefreshGMapMini()
+        {
+            gMapMini.BeginInvoke((MethodInvoker)(() => gMapMini.Refresh()));
+        }
 
-        private void AddMarkerByMouseClick(PointLatLng position)
+        private void AddMarkerByMouseClick(ObservableCollection<GMapMarker> markers, PointLatLng position)
         {
             if (markers.Count == 0)
             {
@@ -218,20 +284,25 @@ namespace PathFinder.Interface
                 this.overlay = overlay;
             }
 
-            internal IList<PolylineChunk> GetChunks()
+            internal List<PolylineChunk> GetChunks()
             {
                 return listOfRoadsPair.Select(x => x.Item1).ToList();
+            }
+
+            internal void AddChunk(PolylineChunk chunk)
+            {
+                GMapRoute route = new GMapRoute(routeDesk);
+                route.Stroke = new Pen(color, 2);
+                route.Points.AddRange(GetListOfPoinLatLng(chunk));
+                overlay.Routes.Add(route);
+                listOfRoadsPair.Add(new Tuple<PolylineChunk, GMapRoute>(chunk, route));
             }
 
             internal void AddChunks(IList<PolylineChunk> chunks)
             {
                 foreach (PolylineChunk chunk in chunks)
                 {
-                    GMapRoute route = new GMapRoute(routeDesk);
-                    route.Stroke = new Pen(color, 2);
-                    route.Points.AddRange(GetListOfPoinLatLng(chunk));
-                    overlay.Routes.Add(route);
-                    listOfRoadsPair.Add(new Tuple<PolylineChunk, GMapRoute>(chunk, route));
+                    AddChunk(chunk);
                 }
             }
 

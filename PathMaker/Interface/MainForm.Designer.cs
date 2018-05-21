@@ -1,4 +1,6 @@
-﻿namespace PathFinder.Interface
+﻿using System.Windows.Forms;
+
+namespace PathFinder.Interface
 
 {
     partial class MainForm
@@ -45,15 +47,30 @@
             this.workTabPage = new System.Windows.Forms.TabPage();
             this.ClearButton = new System.Windows.Forms.Button();
             this.allDirectionsButton = new System.Windows.Forms.Button();
-            this.SettingsTabPage = new System.Windows.Forms.TabPage();
+            this.cvTabPage = new System.Windows.Forms.TabPage();
+            this.detectSignsInViewsButton = new System.Windows.Forms.Button();
+            this.detectorsStatisticLabel = new System.Windows.Forms.Label();
+            this.detecorsInfoListView = new System.Windows.Forms.ListView();
+            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.gMapMini = new GMap.NET.WindowsForms.GMapControl();
+            this.streetViewBox = new System.Windows.Forms.PictureBox();
+            this.settingsTabPage = new System.Windows.Forms.TabPage();
+            this.pluginPathTextBox = new System.Windows.Forms.TextBox();
+            this.pluginPathLabel = new System.Windows.Forms.Label();
+            this.detectorsListBox = new System.Windows.Forms.CheckedListBox();
             this.radiusLabel = new System.Windows.Forms.Label();
             this.radiusUpDown = new System.Windows.Forms.NumericUpDown();
             this.orderInput = new System.Windows.Forms.NumericUpDown();
             this.settingsButton = new System.Windows.Forms.Button();
             this.orderLabel = new System.Windows.Forms.Label();
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.tabControl.SuspendLayout();
             this.workTabPage.SuspendLayout();
-            this.SettingsTabPage.SuspendLayout();
+            this.cvTabPage.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.streetViewBox)).BeginInit();
+            this.settingsTabPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.radiusUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.orderInput)).BeginInit();
             this.SuspendLayout();
@@ -91,6 +108,7 @@
             // 
             // directionRequestButton
             // 
+            this.directionRequestButton.Enabled = false;
             this.directionRequestButton.Location = new System.Drawing.Point(793, 16);
             this.directionRequestButton.Margin = new System.Windows.Forms.Padding(4);
             this.directionRequestButton.Name = "directionRequestButton";
@@ -134,7 +152,7 @@
             this.gMap.ScaleMode = GMap.NET.WindowsForms.ScaleModes.Integer;
             this.gMap.SelectedAreaFillColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(65)))), ((int)(((byte)(105)))), ((int)(((byte)(225)))));
             this.gMap.ShowTileGridLines = false;
-            this.gMap.Size = new System.Drawing.Size(947, 464);
+            this.gMap.Size = new System.Drawing.Size(1182, 615);
             this.gMap.TabIndex = 8;
             this.gMap.Zoom = 10D;
             this.gMap.OnMarkerClick += new GMap.NET.WindowsForms.MarkerClick(this.GMap_OnMarkerClick);
@@ -160,12 +178,13 @@
             // tabControl
             // 
             this.tabControl.Controls.Add(this.workTabPage);
-            this.tabControl.Controls.Add(this.SettingsTabPage);
+            this.tabControl.Controls.Add(this.cvTabPage);
+            this.tabControl.Controls.Add(this.settingsTabPage);
             this.tabControl.Location = new System.Drawing.Point(-1, 1);
             this.tabControl.Margin = new System.Windows.Forms.Padding(4);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(979, 630);
+            this.tabControl.Size = new System.Drawing.Size(1209, 779);
             this.tabControl.TabIndex = 10;
             // 
             // workTabPage
@@ -183,7 +202,7 @@
             this.workTabPage.Margin = new System.Windows.Forms.Padding(4);
             this.workTabPage.Name = "workTabPage";
             this.workTabPage.Padding = new System.Windows.Forms.Padding(4);
-            this.workTabPage.Size = new System.Drawing.Size(971, 601);
+            this.workTabPage.Size = new System.Drawing.Size(1201, 750);
             this.workTabPage.TabIndex = 0;
             this.workTabPage.Text = "Поиск пути";
             this.workTabPage.UseVisualStyleBackColor = true;
@@ -209,21 +228,150 @@
             this.allDirectionsButton.UseVisualStyleBackColor = true;
             this.allDirectionsButton.Click += new System.EventHandler(this.AllDirectionsButton_Click);
             // 
-            // SettingsTabPage
+            // cvTabPage
             // 
-            this.SettingsTabPage.Controls.Add(this.radiusLabel);
-            this.SettingsTabPage.Controls.Add(this.radiusUpDown);
-            this.SettingsTabPage.Controls.Add(this.orderInput);
-            this.SettingsTabPage.Controls.Add(this.settingsButton);
-            this.SettingsTabPage.Controls.Add(this.orderLabel);
-            this.SettingsTabPage.Location = new System.Drawing.Point(4, 25);
-            this.SettingsTabPage.Margin = new System.Windows.Forms.Padding(4);
-            this.SettingsTabPage.Name = "SettingsTabPage";
-            this.SettingsTabPage.Padding = new System.Windows.Forms.Padding(4);
-            this.SettingsTabPage.Size = new System.Drawing.Size(971, 601);
-            this.SettingsTabPage.TabIndex = 1;
-            this.SettingsTabPage.Text = "Настройки";
-            this.SettingsTabPage.UseVisualStyleBackColor = true;
+            this.cvTabPage.Controls.Add(this.detectSignsInViewsButton);
+            this.cvTabPage.Controls.Add(this.detectorsStatisticLabel);
+            this.cvTabPage.Controls.Add(this.detecorsInfoListView);
+            this.cvTabPage.Controls.Add(this.gMapMini);
+            this.cvTabPage.Controls.Add(this.streetViewBox);
+            this.cvTabPage.Location = new System.Drawing.Point(4, 25);
+            this.cvTabPage.Name = "cvTabPage";
+            this.cvTabPage.Padding = new System.Windows.Forms.Padding(3);
+            this.cvTabPage.Size = new System.Drawing.Size(1201, 750);
+            this.cvTabPage.TabIndex = 2;
+            this.cvTabPage.Text = "Обработка";
+            this.cvTabPage.UseVisualStyleBackColor = true;
+            // 
+            // detectSignsInViewsButton
+            // 
+            this.detectSignsInViewsButton.Location = new System.Drawing.Point(474, 693);
+            this.detectSignsInViewsButton.Name = "detectSignsInViewsButton";
+            this.detectSignsInViewsButton.Size = new System.Drawing.Size(151, 23);
+            this.detectSignsInViewsButton.TabIndex = 12;
+            this.detectSignsInViewsButton.Text = "Начать обработку";
+            this.detectSignsInViewsButton.UseVisualStyleBackColor = true;
+            this.detectSignsInViewsButton.Click += new System.EventHandler(this.detectSignsInViewsButton_Click);
+            // 
+            // detectorsStatisticLabel
+            // 
+            this.detectorsStatisticLabel.AutoSize = true;
+            this.detectorsStatisticLabel.Location = new System.Drawing.Point(26, 443);
+            this.detectorsStatisticLabel.Name = "detectorsStatisticLabel";
+            this.detectorsStatisticLabel.Size = new System.Drawing.Size(84, 17);
+            this.detectorsStatisticLabel.TabIndex = 11;
+            this.detectorsStatisticLabel.Text = "Статистика";
+            // 
+            // detecorsInfoListView
+            // 
+            this.detecorsInfoListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader1,
+            this.columnHeader2,
+            this.columnHeader3});
+            this.detecorsInfoListView.Location = new System.Drawing.Point(29, 463);
+            this.detecorsInfoListView.Name = "detecorsInfoListView";
+            this.detecorsInfoListView.Size = new System.Drawing.Size(1137, 192);
+            this.detecorsInfoListView.TabIndex = 10;
+            this.detecorsInfoListView.UseCompatibleStateImageBehavior = false;
+            this.detecorsInfoListView.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeader1
+            // 
+            this.columnHeader1.Text = "Детектор";
+            this.columnHeader1.Width = 89;
+            // 
+            // columnHeader2
+            // 
+            this.columnHeader2.Text = "Всего обнаружено знаков";
+            this.columnHeader2.Width = 209;
+            // 
+            // columnHeader3
+            // 
+            this.columnHeader3.Text = "Знаки, обнаруженные на данном изображении";
+            this.columnHeader3.Width = 357;
+            // 
+            // gMapMini
+            // 
+            this.gMapMini.Bearing = 0F;
+            this.gMapMini.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.gMapMini.CanDragMap = true;
+            this.gMapMini.Cursor = System.Windows.Forms.Cursors.Cross;
+            this.gMapMini.EmptyTileColor = System.Drawing.Color.Navy;
+            this.gMapMini.GrayScaleMode = false;
+            this.gMapMini.HelperLineOption = GMap.NET.WindowsForms.HelperLineOptions.DontShow;
+            this.gMapMini.LevelsKeepInMemmory = 5;
+            this.gMapMini.Location = new System.Drawing.Point(706, 21);
+            this.gMapMini.Margin = new System.Windows.Forms.Padding(4);
+            this.gMapMini.MarkersEnabled = true;
+            this.gMapMini.MaxZoom = 20;
+            this.gMapMini.MinZoom = 2;
+            this.gMapMini.MouseWheelZoomType = GMap.NET.MouseWheelZoomType.MousePositionWithoutCenter;
+            this.gMapMini.Name = "gMapMini";
+            this.gMapMini.NegativeMode = false;
+            this.gMapMini.PolygonsEnabled = true;
+            this.gMapMini.RetryLoadTile = 0;
+            this.gMapMini.RoutesEnabled = true;
+            this.gMapMini.ScaleMode = GMap.NET.WindowsForms.ScaleModes.Integer;
+            this.gMapMini.SelectedAreaFillColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(65)))), ((int)(((byte)(105)))), ((int)(((byte)(225)))));
+            this.gMapMini.ShowTileGridLines = false;
+            this.gMapMini.Size = new System.Drawing.Size(460, 399);
+            this.gMapMini.TabIndex = 9;
+            this.gMapMini.Zoom = 10D;
+            this.gMapMini.Load += new System.EventHandler(this.gMapMini_Load);
+            this.gMapMini.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.gMapMini_MouseDoubleClick);
+            // 
+            // streetViewBox
+            // 
+            this.streetViewBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.streetViewBox.Location = new System.Drawing.Point(29, 21);
+            this.streetViewBox.Name = "streetViewBox";
+            this.streetViewBox.Size = new System.Drawing.Size(642, 399);
+            this.streetViewBox.TabIndex = 0;
+            this.streetViewBox.TabStop = false;
+            // 
+            // settingsTabPage
+            // 
+            this.settingsTabPage.Controls.Add(this.pluginPathTextBox);
+            this.settingsTabPage.Controls.Add(this.pluginPathLabel);
+            this.settingsTabPage.Controls.Add(this.detectorsListBox);
+            this.settingsTabPage.Controls.Add(this.radiusLabel);
+            this.settingsTabPage.Controls.Add(this.radiusUpDown);
+            this.settingsTabPage.Controls.Add(this.orderInput);
+            this.settingsTabPage.Controls.Add(this.settingsButton);
+            this.settingsTabPage.Controls.Add(this.orderLabel);
+            this.settingsTabPage.Location = new System.Drawing.Point(4, 25);
+            this.settingsTabPage.Margin = new System.Windows.Forms.Padding(4);
+            this.settingsTabPage.Name = "settingsTabPage";
+            this.settingsTabPage.Padding = new System.Windows.Forms.Padding(4);
+            this.settingsTabPage.Size = new System.Drawing.Size(1201, 750);
+            this.settingsTabPage.TabIndex = 1;
+            this.settingsTabPage.Text = "Настройки";
+            this.settingsTabPage.UseVisualStyleBackColor = true;
+            // 
+            // pluginPathTextBox
+            // 
+            this.pluginPathTextBox.Location = new System.Drawing.Point(149, 145);
+            this.pluginPathTextBox.Name = "pluginPathTextBox";
+            this.pluginPathTextBox.Size = new System.Drawing.Size(160, 22);
+            this.pluginPathTextBox.TabIndex = 8;
+            // 
+            // pluginPathLabel
+            // 
+            this.pluginPathLabel.AutoSize = true;
+            this.pluginPathLabel.Location = new System.Drawing.Point(17, 150);
+            this.pluginPathLabel.Name = "pluginPathLabel";
+            this.pluginPathLabel.Size = new System.Drawing.Size(116, 17);
+            this.pluginPathLabel.TabIndex = 7;
+            this.pluginPathLabel.Text = "Путь к плагинам";
+            // 
+            // detectorsListBox
+            // 
+            this.detectorsListBox.FormattingEnabled = true;
+            this.detectorsListBox.Location = new System.Drawing.Point(735, 32);
+            this.detectorsListBox.Name = "detectorsListBox";
+            this.detectorsListBox.Size = new System.Drawing.Size(359, 208);
+            this.detectorsListBox.TabIndex = 6;
+            this.detectorsListBox.SelectedIndexChanged += new System.EventHandler(this.detectorsListBox_SelectedIndexChanged);
             // 
             // radiusLabel
             // 
@@ -237,7 +385,7 @@
             // 
             // radiusUpDown
             // 
-            this.radiusUpDown.Location = new System.Drawing.Point(109, 84);
+            this.radiusUpDown.Location = new System.Drawing.Point(149, 87);
             this.radiusUpDown.Margin = new System.Windows.Forms.Padding(4);
             this.radiusUpDown.Maximum = new decimal(new int[] {
             10000,
@@ -250,7 +398,7 @@
             // 
             // orderInput
             // 
-            this.orderInput.Location = new System.Drawing.Point(109, 30);
+            this.orderInput.Location = new System.Drawing.Point(149, 27);
             this.orderInput.Margin = new System.Windows.Forms.Padding(4);
             this.orderInput.Name = "orderInput";
             this.orderInput.Size = new System.Drawing.Size(160, 22);
@@ -258,7 +406,7 @@
             // 
             // settingsButton
             // 
-            this.settingsButton.Location = new System.Drawing.Point(399, 510);
+            this.settingsButton.Location = new System.Drawing.Point(483, 343);
             this.settingsButton.Margin = new System.Windows.Forms.Padding(4);
             this.settingsButton.Name = "settingsButton";
             this.settingsButton.Size = new System.Drawing.Size(100, 28);
@@ -281,8 +429,9 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(976, 631);
+            this.ClientSize = new System.Drawing.Size(1206, 778);
             this.Controls.Add(this.tabControl);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.MaximizeBox = false;
@@ -291,8 +440,11 @@
             this.tabControl.ResumeLayout(false);
             this.workTabPage.ResumeLayout(false);
             this.workTabPage.PerformLayout();
-            this.SettingsTabPage.ResumeLayout(false);
-            this.SettingsTabPage.PerformLayout();
+            this.cvTabPage.ResumeLayout(false);
+            this.cvTabPage.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.streetViewBox)).EndInit();
+            this.settingsTabPage.ResumeLayout(false);
+            this.settingsTabPage.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.radiusUpDown)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.orderInput)).EndInit();
             this.ResumeLayout(false);
@@ -313,7 +465,7 @@
         private System.Windows.Forms.FolderBrowserDialog streetVewsFolderDialog;
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage workTabPage;
-        private System.Windows.Forms.TabPage SettingsTabPage;
+        private System.Windows.Forms.TabPage settingsTabPage;
         private System.Windows.Forms.Label orderLabel;
         private System.Windows.Forms.Button settingsButton;
         private System.Windows.Forms.NumericUpDown orderInput;
@@ -321,6 +473,19 @@
         private System.Windows.Forms.NumericUpDown radiusUpDown;
         private System.Windows.Forms.Button allDirectionsButton;
         private System.Windows.Forms.Button ClearButton;
+        private System.Windows.Forms.CheckedListBox detectorsListBox;
+        private System.Windows.Forms.TextBox pluginPathTextBox;
+        private System.Windows.Forms.Label pluginPathLabel;
+        private System.Windows.Forms.TabPage cvTabPage;
+        private GMap.NET.WindowsForms.GMapControl gMapMini;
+        private System.Windows.Forms.PictureBox streetViewBox;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.Windows.Forms.ListView detecorsInfoListView;
+        private System.Windows.Forms.Label detectorsStatisticLabel;
+        private ColumnHeader columnHeader1;
+        private ColumnHeader columnHeader2;
+        private ColumnHeader columnHeader3;
+        private Button detectSignsInViewsButton;
     }
 }
 

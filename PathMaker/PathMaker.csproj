@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
@@ -10,8 +10,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>PathFinder</RootNamespace>
     <AssemblyName>PathFinder</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
@@ -38,6 +39,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -47,6 +49,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Icons-Land-Vista-Map-Markers-Map-Marker-Marker-Inside-Chartreuse.ico</ApplicationIcon>
@@ -54,7 +57,30 @@
   <PropertyGroup>
     <StartupObject>PathFinder.Core.Program</StartupObject>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Emgu.CV.World">
+      <HintPath>..\..\..\..\..\..\..\Emgu\emgucv-windesktop 3.4.1.2976\bin\Emgu.CV.World.dll</HintPath>
+    </Reference>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.2.0\lib\net40\EntityFramework.dll</HintPath>
       <Private>True</Private>
@@ -70,7 +96,7 @@
       <HintPath>lib\GMap.NET.WindowsForms.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
@@ -87,7 +113,8 @@
     <Compile Include="Core\Parameters.cs" />
     <Compile Include="DataBaseService\PathFinderContext.cs" />
     <Compile Include="Interface\GMapForm.cs" />
-    <Compile Include="SignDetection\PluginsController.cs" />
+    <Compile Include="SignDetection\DetectorsManager.cs" />
+    <Compile Include="StreetViewing\BypassResult.cs" />
     <Compile Include="StreetViewing\JsonObjects\GoogleApiJson\Common\BoundsJson.cs" />
     <Compile Include="StreetViewing\JsonObjects\GoogleApiJson\Common\TextValueJson.cs" />
     <Compile Include="StreetViewing\JsonObjects\GoogleApiJson\Direction\DirectionsGeocodedWayPointJson.cs" />
@@ -113,10 +140,10 @@
     <Compile Include="StreetViewing\JsonObjects\OverpassApiJson\Osm3s.cs" />
     <Compile Include="StreetViewing\JsonObjects\OverpassApiJson\Tag.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SignDetection\IDetector.cs" />
     <Compile Include="StreetViewing\LocationEntity.cs" />
     <Compile Include="StreetViewing\PolylineChunk.cs" />
     <Compile Include="StreetViewing\Service\AbstractRestService.cs" />
+    <Compile Include="StreetViewing\Service\BypassService.cs" />
     <Compile Include="StreetViewing\Service\Downloader.cs" />
     <Compile Include="StreetViewing\Service\GeographiService.cs" />
     <Compile Include="StreetViewing\Service\GoogleRestService.cs" />
@@ -171,6 +198,12 @@
       <ProductName>Windows Installer 4.5</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CommonDetectorApi\CommonDetectorApi.csproj">
+      <Project>{bc07c56c-ca1a-4603-8da2-3f8bc04ca769}</Project>
+      <Name>CommonDetectorApi</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

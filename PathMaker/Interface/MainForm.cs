@@ -11,11 +11,14 @@ using PathFinder.StreetViewing.JsonObjects.GoogleApiJson.Common;
 using GMap.NET;
 using GMap.NET.WindowsForms;
 using PathFinder.StreetViewing;
+using System.Drawing;
+using CommonDetectorApi;
 
 namespace PathFinder.Interface
 {
     delegate void StringArgReturningVoidDelegate(string text);
-    delegate void BoolArgReturningVoidDelegate(bool availability);
+    delegate void ButtonAvailabilityDelegate(Button button);
+    delegate void BitmapArgReturningVoidDelegate(Bitmap image);
 
     public partial class MainForm : Form
     {
@@ -28,6 +31,7 @@ namespace PathFinder.Interface
 
         private Controller controller;
         private Downloader downloader;
+        private BypassService bypassService;
         private GMapForm gMapForm;
         private Parameters parameters;
 
@@ -40,9 +44,11 @@ namespace PathFinder.Interface
             controller = new Controller();
             parameters = Parameters.Instance;
             SetToolTipProperties(toolTip1);
+            detectorsListBox.Items.AddRange(controller.GetDetectorNamesList().ToArray());
             SetToolTipProperties(toolTip2);
             orderInput.Value = parameters.Order;
             radiusUpDown.Value = parameters.Radius;
+            pluginPathTextBox.Text = parameters.PluginsPath;
         }
 
         // ==============================================================================================================
@@ -83,7 +89,7 @@ namespace PathFinder.Interface
                     gMapForm.DrawRoute(directionChunks);
                     if (downloader == null)
                     {
-                        this.streetViewsRequestButton.Enabled = true;
+                        //this.streetViewsRequestButton.Enabled = true;
                     }
 
                 }
@@ -103,11 +109,11 @@ namespace PathFinder.Interface
             {
                 try
                 {
-                    IList<PolylineChunk> areaChunks = controller.GetAllDirectionsOfArea(gMapForm.Markers[0].Position.Lat, gMapForm.Markers[0].Position.Lng);                
-                    gMapForm.DrawRoute(areaChunks);
+                    List<PolylineChunk> areaChunks = controller.GetAllDirectionsOfArea(gMapForm.Markers[0].Position.Lat, gMapForm.Markers[0].Position.Lng);
+                    gMapForm.DrawDbRoute(areaChunks);
                     if (gMapForm.AddedChunks.Count > 0)
                     {
-                        streetViewsRequestButton.Enabled = true;
+                        //streetViewsRequestButton.Enabled = true;
                     }
                 }
                 catch (WebException we)
@@ -131,7 +137,7 @@ namespace PathFinder.Interface
                 Thread downloadStatusThread = new Thread(UpdateStatus);
                 downloadStatusThread.Start();
                 streetViewsRequestButton.Enabled = false;
-                
+
             }
             catch (WebException ex)
             {
@@ -154,6 +160,14 @@ namespace PathFinder.Interface
             {
                 parameters.Radius = (int)radiusUpDown.Value;
             }
+
+            if (!String.IsNullOrEmpty(pluginPathTextBox.Text))
+            {
+                parameters.PluginsPath = pluginPathTextBox.Text;
+                controller.ReloadDetectorManager();
+                detectorsListBox.Items.Clear();
+                detectorsListBox.Items.AddRange(controller.GetDetectorNamesList().ToArray());
+            }
         }
 
         // 
@@ -161,8 +175,20 @@ namespace PathFinder.Interface
         // 
         private void GMap_Load(object sender, EventArgs e)
         {
-            gMapForm = new GMapForm(gMap);
-            gMapForm.DrawDbRoute(LoadExistingChunks());
+            if (gMapForm == null)
+            {
+                gMapForm = new GMapForm(gMap, gMapMini);
+                gMapForm.DrawDbRoute(LoadExistingChunks());
+            }
+        }
+
+        private void gMapMini_Load(object sender, EventArgs e)
+        {
+            if (gMapForm == null)
+            {
+                gMapForm = new GMapForm(gMap, gMapMini);
+                gMapForm.DrawDbRoute(LoadExistingChunks());
+            }
         }
 
         private List<PolylineChunk> LoadExistingChunks()
@@ -173,6 +199,11 @@ namespace PathFinder.Interface
         private void GMap_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             gMapForm.MouseDoubleClick(e);
+        }
+
+        private void gMapMini_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            gMapForm.MapMiniMouseDoubleClick(e);
         }
 
         private void GMap_OnMarkerClick(GMapMarker item, MouseEventArgs e)
@@ -276,46 +307,119 @@ namespace PathFinder.Interface
         {
             while (downloader.Status < 100)
             {
-                this.SetText("Загружено " + downloader.Status + "%");
+                SetText("Загружено " + downloader.Status + "%");
                 System.Threading.Thread.Sleep(1000);
-                List<PolylineChunk> chunks =  downloader.GetDownloadedChunks();
+                List<PolylineChunk> chunks = downloader.GetDownloadedChunks();
                 gMapForm.ShiftToDbRoute(chunks);
             }
 
             this.SetText("Загрузка завершена");
             downloader = null;
-            this.SetAvailability(true);
+            SetAvailability(streetViewsRequestButton);
         }
 
         private void SetText(string text)
         {
-            if (this.resultLabel.InvokeRequired)
+            if (resultLabel.InvokeRequired)
             {
                 StringArgReturningVoidDelegate d = new StringArgReturningVoidDelegate(SetText);
-                this.Invoke(d, new object[] { text });
+                Invoke(d, new object[] { text });
             }
             else
             {
-                this.resultLabel.Text = text;
+                resultLabel.Text = text;
             }
         }
 
-        private void SetAvailability(bool availability)
+        private void SetStreetView(Bitmap image)
         {
-            if (this.streetViewsRequestButton.InvokeRequired)
+            if (streetViewBox.InvokeRequired)
             {
-                BoolArgReturningVoidDelegate d = new BoolArgReturningVoidDelegate(SetAvailability);
-                this.Invoke(d, new object[] { availability });
+                BitmapArgReturningVoidDelegate dlgt = new BitmapArgReturningVoidDelegate(SetStreetView);
+                Invoke(dlgt, new object[] { image });
             }
             else
             {
-                this.streetViewsRequestButton.Enabled = availability;
+                streetViewBox.Image = image;
+            }
+
+        }
+
+        private void SetAvailability(Button button)
+        {
+            if (button.InvokeRequired)
+            {
+                ButtonAvailabilityDelegate d = new ButtonAvailabilityDelegate(SetAvailability);
+                this.Invoke(d, new object[] { button });
+            }
+            else
+            {
+                button.Enabled = true;
             }
         }
 
         private void ClearButton_Click(object sender, EventArgs e)
         {
             gMapForm.ClearAddedRoute();
+        }
+
+        private void detectorsListBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            detecorsInfoListView.Items.Clear();
+            foreach (string detectorName in GetCheckedDetectorsNamesList())
+            {
+                ListViewItem item = detecorsInfoListView.Items.Add(detectorName);
+                item.SubItems.Add("0");
+                item.SubItems.Add("Не найдено ни одного знака на данном изображении");
+
+            }
+            detecorsInfoListView.Refresh();
+        }
+
+        private List<string> GetCheckedDetectorsNamesList()
+        {
+            List<string> checkedDetectorsList = new List<string>();
+            for (int i = 0; i < detectorsListBox.Items.Count; i++)
+            {
+                if (detectorsListBox.GetItemChecked(i))
+                {
+                    checkedDetectorsList.Add(detectorsListBox.Items[i].ToString());
+                }
+            }
+            return checkedDetectorsList;
+        }
+
+        private void detectSignsInViewsButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                bypassService = controller.StartDetection(gMapForm.GetDetectorsStartChunk(), GetCheckedDetectorsNamesList());
+                Thread byPassStatusThread = new Thread(UpdateBypassResults);
+                byPassStatusThread.Start();
+                detectSignsInViewsButton.Enabled = false;
+            }
+            catch (WebException ex)
+            {
+                resultLabel.Text = WEB_ERROR_MESSAGE;
+            }
+        }
+
+        private void UpdateBypassResults()
+        {
+            while (bypassService.Status == 1)
+            {
+                List<BypassResult> bypassResults = bypassService.GetBypassResults();
+                List<PolylineChunk> chunks = bypassService.GetDownloadedChunks();
+                gMapForm.ShiftToDetectedRoute(chunks);
+                foreach (BypassResult result in bypassResults)
+                {
+                    SetStreetView(result.Image);
+                    System.Threading.Thread.Sleep(1000);
+                }
+                System.Threading.Thread.Sleep(1000);
+            }
+            bypassService = null;
+            SetAvailability(detectSignsInViewsButton);
         }
     }
 }

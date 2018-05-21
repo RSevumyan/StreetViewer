@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{1AAE211A-87CC-4A6C-ADA1-B97D0F0E5457}</ProjectGuid>
+    <ProjectGuid>{BC07C56C-CA1A-4603-8DA2-3F8BC04CA769}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DetectorImpl</RootNamespace>
-    <AssemblyName>DetectorImpl</AssemblyName>
+    <RootNamespace>CommonDetectorApi</RootNamespace>
+    <AssemblyName>CommonDetectorApi</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -32,6 +32,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -40,17 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DetectorImpl.cs" />
+    <Compile Include="IDetector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Service References\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\PathMaker\PathFinder.csproj">
-      <Project>{5c08b582-105b-4b58-b2bf-c5e7bc3f37f1}</Project>
-      <Name>PathFinder</Name>
-    </ProjectReference>
+    <Compile Include="Sign.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
