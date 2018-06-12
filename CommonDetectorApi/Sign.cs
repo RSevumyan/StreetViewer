@@ -1,51 +1,51 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace CommonDetectorApi
 {
+    /// <summary>
+    /// Класс, инкапсулирующий информацию по детектированному объекту
+    /// </summary>
     public class Sign
     {
-        private int x;
-        private int y;
-        private int width;
-        private int height;
-        private string className;
+        /// <summary>
+        /// Координата начальной точки области детектированного объекта по оси x
+        /// </summary>
+        public int X { get; }
 
-        public int X
-        {
-            get { return x; }
-        }
+        /// <summary>
+        /// Координата начальной точки области детектированного объекта по оси y
+        /// </summary>
+        public int Y { get; }
 
-        public int Y
-        {
-            get { return y; }
-        }
+        /// <summary>
+        /// Ширина области детектированного объекта
+        /// </summary>
+        public int Width { get; }
 
-        public int Width
-        {
-            get { return width; }
-        }
+        /// <summary>
+        /// Высота области детектированного объекта
+        /// </summary>
+        public int Height { get; }
 
-        public int Height
-        {
-            get { return height; }
-        }
+        /// <summary>
+        /// Класс детектированного объекта
+        /// </summary>
+        public string ClassName { get; }
 
-        public string ClassName
-        {
-            get { return className; }
-        }
-
+        /// <summary>
+        /// Конструктор результата детектирования
+        /// </summary>
+        /// <param name="x">Начальная точка облачти детектированног объекта по x</param>
+        /// <param name="y">Начальная точка облачти детектированног объекта по y</param>
+        /// <param name="width">Ширина области детектированного объекта</param>
+        /// <param name="height">Высота области детектированного объекта</param>
+        /// <param name="className">Класс детектированного объекта</param>
         public Sign(int x, int y, int width, int height, string className)
         {
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-            this.className = className;
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+            ClassName = className;
         }
     }
 }

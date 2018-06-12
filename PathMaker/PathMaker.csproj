@@ -111,10 +111,21 @@
   <ItemGroup>
     <Compile Include="Core\Controller.cs" />
     <Compile Include="Core\Parameters.cs" />
-    <Compile Include="DataBaseService\PathFinderContext.cs" />
+    <Compile Include="DatabaseService\GeographiData.cs" />
+    <Compile Include="DatabaseService\Model\Image.cs" />
+    <Compile Include="DatabaseService\Model\ImagePack.cs" />
+    <Compile Include="DatabaseService\Model\OrderedLocationEntity.cs" />
+    <Compile Include="DatabaseService\Model\Sign.cs" />
+    <Compile Include="DatabaseService\PathFinderContext.cs" />
+    <Compile Include="Interface\AbstractConcurrentProcess.cs" />
+    <Compile Include="Interface\ConcurrencyUtils.cs" />
+    <Compile Include="Interface\EmbededRoute.cs" />
     <Compile Include="Interface\GMapForm.cs" />
+    <Compile Include="Interface\RoadsLoading.cs" />
+    <Compile Include="Interface\SignDetection.cs" />
+    <Compile Include="Interface\StreetViewsLoading.cs" />
     <Compile Include="SignDetection\DetectorsManager.cs" />
-    <Compile Include="StreetViewing\BypassResult.cs" />
+    <Compile Include="StreetViewing\Service\SignDetectionResult.cs" />
     <Compile Include="StreetViewing\JsonObjects\GoogleApiJson\Common\BoundsJson.cs" />
     <Compile Include="StreetViewing\JsonObjects\GoogleApiJson\Common\TextValueJson.cs" />
     <Compile Include="StreetViewing\JsonObjects\GoogleApiJson\Direction\DirectionsGeocodedWayPointJson.cs" />
@@ -140,10 +151,11 @@
     <Compile Include="StreetViewing\JsonObjects\OverpassApiJson\Osm3s.cs" />
     <Compile Include="StreetViewing\JsonObjects\OverpassApiJson\Tag.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StreetViewing\LocationEntity.cs" />
-    <Compile Include="StreetViewing\PolylineChunk.cs" />
+    <Compile Include="DatabaseService\Model\LocationEntity.cs" />
+    <Compile Include="DatabaseService\Model\PolylineChunk.cs" />
+    <Compile Include="DatabaseService\Model\Road.cs" />
     <Compile Include="StreetViewing\Service\AbstractRestService.cs" />
-    <Compile Include="StreetViewing\Service\BypassService.cs" />
+    <Compile Include="StreetViewing\Service\SignDetectionProcessor.cs" />
     <Compile Include="StreetViewing\Service\Downloader.cs" />
     <Compile Include="StreetViewing\Service\GeographiService.cs" />
     <Compile Include="StreetViewing\Service\GoogleRestService.cs" />
@@ -162,6 +174,7 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <None Include="App.config" />
+    <None Include="ClassDiagram1.cd" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

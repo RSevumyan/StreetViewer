@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.IO;
 using System.Threading;
 
 using PathFinder.StreetViewing.Service;
@@ -10,11 +7,10 @@ using PathFinder.StreetViewing.JsonObjects.GoogleApiJson.Common;
 using PathFinder.StreetViewing.JsonObjects.GoogleApiJson.Geocoding;
 using PathFinder.StreetViewing.JsonObjects.GoogleApiJson.Direction;
 using PathFinder.StreetViewing.JsonObjects.OverpassApiJson;
-using System.Reflection;
 using PathFinder.SignDetection;
-using PathFinder.StreetViewing;
 using PathFinder.DataBaseService;
 using CommonDetectorApi;
+using PathFinder.DatabaseService.Model;
 
 namespace PathFinder.Core
 {
@@ -65,66 +61,11 @@ namespace PathFinder.Core
         }
 
         /// <summary>
-        /// Получить путь между двумя географическими названиями.
-        /// </summary>
-        /// <param name="startStreet">
-        /// Начальная точка, в формате xxx.xxxx,yyy.yyyy,
-        /// или географическое наименование, которое будет началом пути.
-        /// </param>
-        /// <param name="endStreet">
-        /// Конечная точка, в формате xxx.xxxx,yyy.yyyy,
-        /// или географическое наименование, которое будет концом пути.
-        /// </param>
-        /// <returns>Список координат пути или null, если результат пустой.</returns>
-        public IList<PolylineChunk> GetDirection(string startStreet, string endStreet)
-        {
-            DirectionsStatusJson json = googleService.GetDirection(startStreet, endStreet);
-            return HandleGoogleDirectionResultJson(json);
-        }
-
-        /// <summary>
-        /// Получить путь между двумя географическими названиями.
-        /// </summary>
-        /// <param name="start">
-        /// Начальная точка в формате GMap.NET.PointLatLng.
-        /// </param>
-        /// <param name="end">
-        /// Конечная точка, в формате GMap.NET.PointLatLng
-        /// </param>
-        /// <returns>Список координат пути или null, если результат пустой.</returns>
-        public IList<PolylineChunk> GetDirection(GMap.NET.PointLatLng start, GMap.NET.PointLatLng end)
-        {
-            return GetDirection(start.Lat, start.Lng, end.Lat, end.Lng);
-        }
-
-        /// <summary>
-        /// Получить путь между двумя географическими названиями.
-        /// </summary>
-        /// <param name="startLat">
-        /// Широта начальной точки
-        /// </param>
-        /// <param name="startLng">
-        /// Долгота начальной точки
-        /// </param>
-        /// <param name="endLat">
-        /// Широта конечной точки
-        /// </param>
-        /// <param name="endLng">
-        /// Долгота конечной точки
-        /// </param>
-        /// <returns>Список координат пути или null, если результат пустой.</returns>
-        public IList<PolylineChunk> GetDirection(double startLat, double startLng, double endLat, double endLng)
-        {
-            DirectionsStatusJson json = googleService.GetDirection(startLat, startLng, endLat, endLng);
-            return HandleGoogleDirectionResultJson(json);
-        }
-
-        /// <summary>
-        /// Начать загрузку панорам по заданному списку путей.
+        /// Начать загрузку панорам по заданному списку путей
         /// </summary>
         /// <param name="points">Список путей (список списков координат)</param>
-        /// <param name="path">Путь у директории, в которых будут сохраняться снимки панорам.</param>
-        /// <returns>Объект, который загружает панорамы в отдельном потоке.</returns>
+        /// <param name="path">Путь у директории, в которых будут сохраняться снимки панорам</param>
+        /// <returns>Объект, который загружает панорамы в отдельном потоке</returns>
         public Downloader GetStreetViews(IList<PolylineChunk> chunks, string path)
         {
             downloader = new Downloader(path, chunks, googleService, dbContext);
@@ -133,13 +74,36 @@ namespace PathFinder.Core
             return downloader;
         }
 
-        public BypassService StartDetection(PolylineChunk start, List<string> detectorsNames)
+        /// <summary>
+        /// Начать загрузку панорам по заданному списку улиц.
+        /// </summary>
+        /// <param name="roads">Список улиц</param>
+        /// <param name="path">Путь у директории, в которых будут сохраняться снимки панорам</param>
+        /// <returns>Объект, который загружает панорамы в отдельном потоке</returns>
+        public Downloader GetStreetViews(List<string> roadsNames, string path)
+        {
+            Dictionary<string, Road> roadDictionary = GeographiData.Instance.Roads;
+            List<Road> roads = roadsNames.Select(x => roadDictionary[x]).ToList();
+            downloader = new Downloader(path, roads, googleService, dbContext, geoService);
+            Thread downloadThread = new Thread(downloader.DownloadRoadsStreetViews);
+            downloadThread.Start();
+            return downloader;
+        }
+
+        /// <summary>
+        /// Начать детектирование объектов на выбранных улицах
+        /// </summary>
+        /// <param name="roads">Список названий улиц</param>
+        /// <param name="detectorsNames">Список названий детекторов, которые будут использоваться для детектирования объектов</param>
+        /// <returns></returns>
+        public SignDetectionProcessor StartDetection(List<string> roads, List<string> detectorsNames)
         {
             List<IDetector> selectedDetectors = detectorsManager.Detectors.Where(x => detectorsNames.Contains(x.Name)).ToList();
-            BypassService bypassService = new BypassService(googleService, dbContext, selectedDetectors, parameters.StreetViewsPath, start);
-            Thread bypassThread = new Thread(bypassService.Start);
+            SignDetectionProcessor processor = new SignDetectionProcessor(roads, selectedDetectors, dbContext);
+            Thread bypassThread = new Thread(processor.Start);
             bypassThread.Start();
-            return bypassService;
+            return processor;
+
         }
 
         /// <summary>
@@ -151,7 +115,7 @@ namespace PathFinder.Core
         public List<PolylineChunk> GetAllDirectionsOfArea(double lat, double lng)
         {
             List<PolylineChunk> areaChunks = new List<PolylineChunk>();
-            GeoJson geoJson = overpassService.getWaysOfArea(lat, lng, parameters.Radius);
+            GeoJson geoJson = overpassService.GetWaysOfArea(lat, lng, parameters.Radius);
             HashSet<long> chunkIdSet = new HashSet<long>(dbContext.Chunks.Select(ch => ch.OverpassId));
             areaChunks.AddRange(geoService.GetPolylineChunksFromGeoJson(geoJson));
             areaChunks.RemoveAll(ch => chunkIdSet.Contains(ch.OverpassId));
@@ -160,6 +124,54 @@ namespace PathFinder.Core
             return areaChunks;
         }
 
+        /// <summary>
+        /// Получить вссе улицы по области
+        /// </summary>
+        /// <param name="lat">Центральная долгота</param>
+        /// <param name="lng">Центральная широта</param>
+        /// <returns>Словарь улиц</returns>
+        public Dictionary<string, Road> GetAllRoadsOfArea(double lat, double lng)
+        {
+            GeoJson geoJson = overpassService.GetWaysOfArea(lat, lng, parameters.Radius);
+            return GetAllRoadsOfArea(geoJson);
+        }
+
+        /// <summary>
+        /// Получить вссе улицы по области
+        /// </summary>
+        /// <param name="firstLat">Широта первой точки</param>
+        /// <param name="firstlng">Долгота первой точки</param>
+        /// <param name="secondLat">Широта второй точки</param>
+        /// <param name="secondLng">Долгота второй точки</param>
+        /// <returns>Словарь улиц</returns>
+        public Dictionary<string, Road> GetAllRoadsOfArea(double firstLat, double firstlng, double secondLat, double secondLng)
+        {
+            GeoJson geoJson = overpassService.GetWaysOfArea(firstLat, firstlng, secondLat, secondLng);
+            return GetAllRoadsOfArea(geoJson);
+        }
+
+        private Dictionary<string, Road> GetAllRoadsOfArea(GeoJson geoJson)
+        {
+            Dictionary<string, Road> roadsDictionary = new Dictionary<string, Road>();
+            roadsDictionary = geoService.GetRoadsDictionaryFromGeoJson(geoJson);
+            //dbContext.Roads.AddRange(roadsDictionary.Values);
+            //dbContext.SaveChanges();
+
+            foreach(Road road in roadsDictionary.Values)
+            {
+                if(road.Id == 0)
+                {
+                    dbContext.Roads.Add(road);
+                }
+            }
+            dbContext.SaveChanges();
+            return roadsDictionary;
+        }
+
+        /// <summary>
+        /// ЗАгрузить из базы все участки путей
+        /// </summary>
+        /// <returns>Список участков путей</returns>
         public List<PolylineChunk> LoadExistingChunks()
         {
             List<PolylineChunk> chunks = new List<PolylineChunk>();
@@ -167,48 +179,41 @@ namespace PathFinder.Core
             return chunks;
         }
 
+        /// <summary>
+        /// Загрузить все геоданные из базы
+        /// </summary>
+        /// <returns>Географические данные</returns>
+        public GeographiData LoadGeoData()
+        {
+            GeographiData geoData = GeographiData.Instance;
+            geoData.Locations = dbContext.LocationEntities.ToDictionary(l => l.OverpassId);
+            geoData.Chunks = dbContext.Chunks.ToDictionary(ch => ch.OverpassId);
+            geoData.Roads = dbContext.Roads.ToDictionary(r => r.Name);
+            return geoData;
+        }
+
+        /// <summary>
+        /// Получить список названий загруженных детекторов
+        /// </summary>
+        /// <returns>Список названий загруженных детекторов</returns>
         public List<string> GetDetectorNamesList()
         {
             return detectorsManager.Detectors.Select(detector => detector.Name).ToList();
         }
 
+        /// <summary>
+        /// Перезагрузить менеджер плагинов
+        /// </summary>
         public void ReloadDetectorManager()
         {
             detectorsManager = new DetectorsManager(parameters.PluginsPath);
         }
 
-        // ==============================================================================================================
-        // = Implementation
-        // ==============================================================================================================
-
-        private IList<PolylineChunk> HandleGoogleDirectionResultJson(DirectionsStatusJson json)
+        public HashSet<DatabaseService.Model.Sign> LoadSigns()
         {
-            if ("NOT_FOUND".Equals(json.Status))
-            {
-                return null;
-            }
-            else
-            {
-                List<Location> result = geoService.DecodePolyline(json.Routes[0].OverviewPolyline.Points);
-                return PopulatePolylineChunks(LocationEntity.ConvertFromGoogleLocations(result));
-            }
-
-        }
-
-        private List<PolylineChunk> PopulatePolylineChunks(List<LocationEntity> locationsList)
-        {
-            List<PolylineChunk> chunkList = new List<PolylineChunk>();
-            for (int i = 1; i < locationsList.Count - 2; i++)
-            {
-                List<LocationEntity> chunkLocationList = new List<LocationEntity>();
-
-                chunkLocationList.Add(locationsList[i]);
-                chunkLocationList.AddRange(geoService.GetIntermediateLocations(locationsList[i], locationsList[i + 1]));
-                chunkLocationList.Add(locationsList[i + 1]);
-                PolylineChunk chunk = new PolylineChunk(chunkLocationList);
-                chunkList.Add(chunk);
-            }
-            return chunkList;
+            HashSet<DatabaseService.Model.Sign> signsSet = new HashSet<DatabaseService.Model.Sign>();
+            signsSet.Union(dbContext.Signs);
+            return signsSet;
         }
     }
 }

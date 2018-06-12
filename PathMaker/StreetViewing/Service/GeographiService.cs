@@ -6,6 +6,9 @@ using System.Text;
 using PathFinder.StreetViewing.JsonObjects.GoogleApiJson.Common;
 using PathFinder.StreetViewing.JsonObjects.OverpassApiJson;
 using PathFinder.Core;
+using PathFinder.DataBaseService;
+using PathFinder.StreetViewing.JsonObjects.GoogleApiJson.Direction;
+using PathFinder.DatabaseService.Model;
 
 namespace PathFinder.StreetViewing.Service
 {
@@ -93,16 +96,26 @@ namespace PathFinder.StreetViewing.Service
             return EARTH_RADIUS * sigma;
         }
 
+        /// <summary>
+        /// Получение участков пути из Geo Json
+        /// </summary>
+        /// <param name="geoJson">Geo Json</param>
+        /// <returns>Список учасков пути</returns>
         public List<PolylineChunk> GetPolylineChunksFromGeoJson(GeoJson geoJson)
         {
             List<PolylineChunk> resultChunks = new List<PolylineChunk>();
             Dictionary<long, Element> ways = new Dictionary<long, Element>();
             Dictionary<long, Element> nodes = new Dictionary<long, Element>();
+            Dictionary<string, Road> roads = new Dictionary<string, Road>();
             foreach (Element elem in geoJson.Elements)
             {
                 if (elem.Type == "way")
                 {
                     ways.Add(elem.Id, elem);
+                    if (!roads.ContainsKey(elem.Tags.Name))
+                    {
+                        roads.Add(elem.Tags.Name, new Road(elem.Tags.Name));
+                    }
                 }
                 else if (elem.Type == "node")
                 {
@@ -112,62 +125,76 @@ namespace PathFinder.StreetViewing.Service
 
             foreach (Element way in ways.Values)
             {
-
                 PolylineChunk chunk = new PolylineChunk();
                 chunk.OverpassId = way.Id;
-                List<LocationEntity> chunkLocation = new List<LocationEntity>();
+                List<OrderedLocationEntity> chunkLocation = new List<OrderedLocationEntity>();
                 for (int i = 0; i < way.Nodes.Count() - 1; i++)
                 {
                     LocationEntity start = new LocationEntity(nodes[way.Nodes[i]].Lat, nodes[way.Nodes[i]].Lon);
-                    chunkLocation.Add(start);
-                    LocationEntity end = new LocationEntity(nodes[way.Nodes[i+1]].Lat, nodes[way.Nodes[i+1]].Lon);
-                    chunkLocation.AddRange(GetIntermediateLocations(start, end));
-                    chunkLocation.Add(end);
+                    chunkLocation.Add(new OrderedLocationEntity(i,start));
+                    LocationEntity end = new LocationEntity(nodes[way.Nodes[i + 1]].Lat, nodes[way.Nodes[i + 1]].Lon);
+                    //chunkLocation.AddRange(GetIntermediateLocations(start, end));
+                    chunkLocation.Add(new OrderedLocationEntity(i+1, start));
                 }
-                chunk.LocationEntities = chunkLocation;
+                chunk.OrderedLocationEntities = chunkLocation;
                 resultChunks.Add(chunk);
             }
             return resultChunks;
         }
 
         /// <summary>
-        /// Получить список путей из geoJson
+        /// Получить словарь улиц из Geo Json
         /// </summary>
-        /// <param name="geoJson">geoJson, в котором содержиться информация по путям в области</param>
-        /// <returns>Список путей (список списков географических точек)</returns>
-        public List<List<Location>> GetAllDirectionsFromGeoJson(GeoJson geoJson)
+        /// <param name="geoJson">Geo Json</param>
+        /// <returns>Словарь улиц</returns>
+        public Dictionary<string, Road> GetRoadsDictionaryFromGeoJson(GeoJson geoJson)
         {
-            Dictionary<long, Element> ways = new Dictionary<long, Element>();
-            Dictionary<long, Element> nodes = new Dictionary<long, Element>();
+            Dictionary<string, Road> roads = new Dictionary<string, Road>();
+            GeographiData geoData = GeographiData.Instance;
+            List<Element> ways = new List<Element>();
             foreach (Element elem in geoJson.Elements)
             {
-                if (elem.Type == "way")
+                if (elem.Type == "way" && !string.IsNullOrEmpty(elem.Tags.Name) && !geoData.Chunks.Keys.Contains(elem.Id))
                 {
-                    ways.Add(elem.Id, elem);
+                    ways.Add(elem);
                 }
-                else if (elem.Type == "node")
+                else if (elem.Type == "node" && !geoData.Locations.Keys.Contains(elem.Id))
                 {
-                    nodes.Add(elem.Id, elem);
+                    geoData.Locations.Add(elem.Id, new LocationEntity(elem));
                 }
             }
 
-            List<List<long>> combinedWays = CombineWays(ways);
-
-            List<List<Location>> formattedWays = new List<List<Location>>();
-
-            foreach (List<long> way in combinedWays)
+            foreach (Element elem in ways)
             {
-                List<Location> locations = new List<Location>();
-                foreach (long nodeId in way)
+                PolylineChunk chunk = CreateChunk(elem);
+                geoData.Chunks.Add(chunk.OverpassId, chunk);
+                if (geoData.Roads.Keys.Contains(elem.Tags.Name))
                 {
-                    Location newLocation = new Location(nodes[nodeId].Lat, nodes[nodeId].Lon);
-                    locations.Add(newLocation);
+                    Road road = geoData.Roads[elem.Tags.Name];
+                    AddElementToWay(road.PolylineChunks, chunk);
+                    road.IsStreetViewsDownloaded = false;
+                    if (!roads.Keys.Contains(road.Name))
+                    {
+                        roads.Add(road.Name, road);
+                    }
                 }
-                formattedWays.Add(locations);
+                else
+                {
+                    Road road = new Road(elem.Tags.Name);
+                    AddElementToWay(road.PolylineChunks, chunk);
+                    roads.Add(road.Name, road);
+                    geoData.Roads.Add(road.Name, road);
+                }
             }
-            return formattedWays;
+            return roads;
         }
 
+        /// <summary>
+        /// Получить промежуточные точки между двумя географическими координатами
+        /// </summary>
+        /// <param name="start">Начальная координата</param>
+        /// <param name="end">Конечная координата</param>
+        /// <returns>Список промежуточных координат</returns>
         public List<LocationEntity> GetIntermediateLocations(LocationEntity start, LocationEntity end)
         {
             int orderParam = Parameters.Instance.Order;
@@ -194,11 +221,57 @@ namespace PathFinder.StreetViewing.Service
             return locationList;
         }
 
+        /// <summary>
+        /// Вучислить угол направления по расстоянию по широте и долготе между двумя точками
+        /// </summary>
+        /// <param name="height">Расстояние по широте между двумя точками</param>
+        /// <param name="width">Расстояние по долготе между двумя точками</param>
+        /// <returns>Угол направление между двумя точками</returns>
+        public double CalculateAngle(double height, double width)
+        {
+            height += height == 0 ? 0.00001 : 0;
+            double angle = Math.Atan(width / height) * (180 / Math.PI);
+
+            if (angle < 0)
+            {
+                angle += 90;
+            }
+
+            if (height >= 0 && width < 0)
+            {
+                angle += 90;
+            }
+            else if (height > 0 && width >= 0)
+            {
+                angle += 180;
+            }
+            else if (height <= 0 && width > 0)
+            {
+                angle += 270;
+            }
+            return angle;
+        }
+
         // ==============================================================================================================
         // = Implementation
         // ==============================================================================================================
 
-        private List<List<long>> CombineWays(Dictionary<long, Element> ways)
+        private PolylineChunk CreateChunk(Element way)
+        {
+            GeographiData geoData = GeographiData.Instance;
+            PolylineChunk chunk = new PolylineChunk();
+            chunk.OverpassId = way.Id;
+            chunk.OrderedLocationEntities = new List<OrderedLocationEntity>();
+            for(int i = 0; i < way.Nodes.Count(); i++)
+            {
+                LocationEntity location = geoData.Locations[way.Nodes[i]];
+                chunk.OrderedLocationEntities.Add(new OrderedLocationEntity(i, location));
+
+            }
+            return chunk;
+        }
+
+        private Dictionary<string, List<Element>> CombineWays(Dictionary<long, Element> ways)
         {
             Dictionary<string, List<Element>> preCombinedWays = new Dictionary<string, List<Element>>();
             foreach (Element way in ways.Values)
@@ -216,23 +289,53 @@ namespace PathFinder.StreetViewing.Service
                     }
                 }
             }
+            return preCombinedWays;
+        }
 
-            List<List<long>> list = new List<List<long>>();
-            foreach (List<Element> elemList in preCombinedWays.Values)
+        private void AddElementToWay(List<PolylineChunk> way, PolylineChunk partWay)
+        {
+            int prev = way.FindIndex(elem => elem.OrderedLocationEntities[elem.OrderedLocationEntities.Count - 1].LocationEntity.OverpassId == partWay.OrderedLocationEntities[0].LocationEntity.OverpassId);
+            int next = way.FindIndex(elem => elem.OrderedLocationEntities[0].LocationEntity.OverpassId == partWay.OrderedLocationEntities[partWay.OrderedLocationEntities.Count - 1].LocationEntity.OverpassId);
+            if (prev == -1 && next == -1)
             {
-                int index = 0;
-                while (index < elemList.Count - 1)
+                way.Add(partWay);
+            }
+            else if (prev != -1 && next == -1)
+            {
+                way.Insert(prev + 1, partWay);
+            }
+            else if (prev == -1 && next != -1)
+            {
+                way.Insert(next, partWay);
+            }
+            else if (prev != -1 && next != -1)
+            {
+                if (prev < next)
                 {
-                    List<long> localList = new List<long>();
-                    do
+                    for (int i = way.Count - 1; i >= next; i--)
                     {
-                        localList.AddRange(elemList[index].Nodes);
-                        index++;
-                    } while (index < elemList.Count && localList[localList.Count - 1] == elemList[index].Nodes[0]);
-                    list.Add(localList.Distinct().ToList());
+                        PolylineChunk chunk = way[way.Count - 1];
+                        way.RemoveAt(way.Count - 1);
+                        way.Insert(prev + 1, chunk);
+                    }
+                    way.Insert(prev + 1, partWay);
+                }
+                else if (prev > next)
+                {
+                    int index = prev;
+                    while (index > 0 && way[index].OrderedLocationEntities[0].LocationEntity.OverpassId == way[index - 1].OrderedLocationEntities[way[index - 1].OrderedLocationEntities.Count - 1].LocationEntity.OverpassId)
+                    {
+                        index--;
+                    }
+                    for (int i = prev; i >= index; i--)
+                    {
+                        PolylineChunk elem = way[prev];
+                        way.RemoveAt(prev);
+                        way.Insert(next, elem);
+                    }
+                    way.Insert(next + 1, partWay);
                 }
             }
-            return list;
         }
 
         private void AddElementToWay(List<Element> way, Element partWay)

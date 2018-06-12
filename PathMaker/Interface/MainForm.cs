@@ -6,20 +6,17 @@ using System.Net;
 
 using PathFinder.StreetViewing.Service;
 using PathFinder.Core;
-using PathFinder.StreetViewing.JsonObjects.GoogleApiJson.Common;
 
-using GMap.NET;
 using GMap.NET.WindowsForms;
 using PathFinder.StreetViewing;
-using System.Drawing;
-using CommonDetectorApi;
+using PathFinder.DataBaseService;
+using PathFinder.DatabaseService.Model;
+using GMap.NET.MapProviders;
+using GMap.NET;
+using GMap.NET.WindowsForms.Markers;
 
 namespace PathFinder.Interface
 {
-    delegate void StringArgReturningVoidDelegate(string text);
-    delegate void ButtonAvailabilityDelegate(Button button);
-    delegate void BitmapArgReturningVoidDelegate(Bitmap image);
-
     public partial class MainForm : Form
     {
         private const string ERROR_MESSAGE = "Введены некорректные данные";
@@ -30,10 +27,13 @@ namespace PathFinder.Interface
         private const string RESULTLABEL_STREETVIEWS_SUCCESS = "Панорамы успешно загружены";
 
         private Controller controller;
-        private Downloader downloader;
-        private BypassService bypassService;
+        private SignDetectionProcessor bypassService;
         private GMapForm gMapForm;
         private Parameters parameters;
+
+        private Dictionary<string, int> streetsViewRowIndexDictionary;
+        private Dictionary<string, int> streetsBypassRowIndexDictionary;
+        private Dictionary<int, Sign> signRowIndexDictionary;
 
         /// <summary>
         /// Стандартный конструктор.
@@ -49,72 +49,70 @@ namespace PathFinder.Interface
             orderInput.Value = parameters.Order;
             radiusUpDown.Value = parameters.Radius;
             pluginPathTextBox.Text = parameters.PluginsPath;
+            streetsViewRowIndexDictionary = new Dictionary<string, int>();
+            streetsBypassRowIndexDictionary = new Dictionary<string, int>();
+            signRowIndexDictionary = new Dictionary<int, Sign>();
+            LoadData();
         }
+
+        private void LoadData()
+        {
+            signsMap.MapProvider = GoogleMapProvider.Instance;
+            GMaps.Instance.Mode = AccessMode.ServerOnly;
+            signsMap.SetPositionByKeywords("Moscow, Russia");
+            signsMap.ShowCenter = false;
+            signsMap.DragButton = MouseButtons.Left;
+            GMapOverlay currentOverlay = new GMapOverlay("SignsMap Overlay");
+            signsMap.Overlays.Add(currentOverlay);
+            LoadSignsGridViewData();
+        }
+
+        internal Button AllDirectionButton { get { return allDirectionsButton; } }
+
+        internal Button StreetViewsRequestButton { get { return streetViewsRequestButton; } }
+
+        internal Button DetectSignsInViewsButton { get { return detectSignsInViewsButton; } }
+
+        internal Button ClearButton { get { return clearButton; } }
+
+        internal GMapForm GMapForm { get { return gMapForm; } }
+
+        internal Label ResultLabel { get { return resultLabel; } }
+
+        internal DataGridView StreetsGridView { get { return streetsGridView; } }
+
+        internal DataGridView StreetsBypassView { get { return streetsBypassView; } }
+
+        internal DataGridView SignsGridView { get { return signsGridView; } }
+
+        internal Dictionary<string, int> StreetViewsRowIndexDictionary { get { return streetsViewRowIndexDictionary; } }
+
+        internal Dictionary<string, int> StreetsBypassRowIndexDictionary { get { return streetsBypassRowIndexDictionary; } }
+
+        internal Dictionary<int, Sign> SignRowIndexDictionary { get { return signRowIndexDictionary; } }
+
+        internal PictureBox StreetViewBox { get { return streetViewBox; } }
 
         // ==============================================================================================================
         // = Implementation
         // ==============================================================================================================
 
         // 
-        // directionRequestButton events
-        // 
-        private void DirectionRequestButton_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (gMapForm.Markers.Count < 2 && (string.IsNullOrEmpty(startStreet.Text) || string.IsNullOrEmpty(endStreet.Text)))
-                {
-                    resultLabel.Text = ERROR_MESSAGE;
-                }
-                else
-                {
-                    List<PolylineChunk> directionChunks = new List<PolylineChunk>();
-                    if (gMapForm.Markers.Count > 1 && gMapForm.Markers[0].IsVisible)
-                    {
-                        for (int i = 0; i < gMapForm.Markers.Count - 1; i++)
-                        {
-                            IList<PolylineChunk> partChunks = controller.GetDirection(gMapForm.Markers[i].Position, gMapForm.Markers[i + 1].Position);
-                            directionChunks.AddRange(partChunks);
-                        }
-                    }
-                    else if (!string.IsNullOrEmpty(startStreet.Text) && !string.IsNullOrEmpty(endStreet.Text))
-                    {
-                        KeyEventArgs keyEventArgs = new KeyEventArgs(Keys.Enter);
-                        StartStreet_KeyUp(sender, keyEventArgs);
-                        EndStreet_KeyUp(sender, keyEventArgs);
-                        IList<PolylineChunk> partChunks = controller.GetDirection(startStreet.Text, endStreet.Text);
-                        directionChunks.AddRange(partChunks);
-                    }
-
-                    gMapForm.DrawRoute(directionChunks);
-                    if (downloader == null)
-                    {
-                        //this.streetViewsRequestButton.Enabled = true;
-                    }
-
-                }
-            }
-            catch (WebException ex)
-            {
-                resultLabel.Text = WEB_ERROR_MESSAGE;
-            }
-        }
-
-        // 
         // allDirectionsButtonEvents
         //
         private void AllDirectionsButton_Click(object sender, EventArgs e)
         {
-            if (gMapForm.Markers[0].IsVisible)
+            if (gMapForm.Markers.Count < 1)
+            {
+                resultLabel.Text = "Не установлено ни одного маркера. Для загрузки путей установите маркер на карту.";
+            }
+            else if (gMapForm.Markers[0].IsVisible)
             {
                 try
                 {
-                    List<PolylineChunk> areaChunks = controller.GetAllDirectionsOfArea(gMapForm.Markers[0].Position.Lat, gMapForm.Markers[0].Position.Lng);
-                    gMapForm.DrawDbRoute(areaChunks);
-                    if (gMapForm.AddedChunks.Count > 0)
-                    {
-                        //streetViewsRequestButton.Enabled = true;
-                    }
+                    RoadsLoading roadsLoading = new RoadsLoading(this, controller);
+                    Thread thread = new Thread(roadsLoading.Process);
+                    thread.Start();
                 }
                 catch (WebException we)
                 {
@@ -128,16 +126,26 @@ namespace PathFinder.Interface
         //
         private void StreetViewsRequestButton_Click(object sender, EventArgs e)
         {
-            List<List<Location>> list = new List<List<Location>>();
             streetVewsFolderDialog.SelectedPath = AppDomain.CurrentDomain.BaseDirectory;
             try
             {
-                string path = streetVewsFolderDialog.SelectedPath + "Chunks";
-                downloader = controller.GetStreetViews(gMapForm.AddedChunks, path);
-                Thread downloadStatusThread = new Thread(UpdateStatus);
-                downloadStatusThread.Start();
-                streetViewsRequestButton.Enabled = false;
-
+                StreetViewsLoading streetViewsLoading = new StreetViewsLoading(this, controller);
+                Thread thread = new Thread(streetViewsLoading.Process);
+                thread.Start();
+            }
+            catch (WebException ex)
+            {
+                resultLabel.Text = WEB_ERROR_MESSAGE;
+            }
+        }
+        private void detectSignsInViewsButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                SignDetection detection = new SignDetection(this, controller);
+                //bypassService = controller.StartDetection(gMapForm.GetDetectorsStartChunk(), GetCheckedDetectorsNamesList());
+                Thread thread = new Thread(detection.Process);
+                thread.Start();
             }
             catch (WebException ex)
             {
@@ -161,7 +169,7 @@ namespace PathFinder.Interface
                 parameters.Radius = (int)radiusUpDown.Value;
             }
 
-            if (!String.IsNullOrEmpty(pluginPathTextBox.Text))
+            if (!string.IsNullOrEmpty(pluginPathTextBox.Text))
             {
                 parameters.PluginsPath = pluginPathTextBox.Text;
                 controller.ReloadDetectorManager();
@@ -178,7 +186,14 @@ namespace PathFinder.Interface
             if (gMapForm == null)
             {
                 gMapForm = new GMapForm(gMap, gMapMini);
-                gMapForm.DrawDbRoute(LoadExistingChunks());
+                controller.LoadGeoData();
+                GeographiData geoData = GeographiData.Instance;
+                foreach (Road road in geoData.Roads.Values)
+                {
+                    gMapForm.MainMapRoute.AddRoad(road);
+                    streetsViewRowIndexDictionary.Add(road.Name, streetsGridView.RowCount);
+                    streetsGridView.Rows.Add(road.Name, road.IsStreetViewsDownloaded ? "Да" : "Нет", false);
+                }
             }
         }
 
@@ -187,13 +202,38 @@ namespace PathFinder.Interface
             if (gMapForm == null)
             {
                 gMapForm = new GMapForm(gMap, gMapMini);
-                gMapForm.DrawDbRoute(LoadExistingChunks());
+                controller.LoadGeoData();
             }
-        }
 
-        private List<PolylineChunk> LoadExistingChunks()
-        {
-            return controller.LoadExistingChunks();
+            GeographiData geoData = GeographiData.Instance;
+            foreach (Road road in geoData.Roads.Values)
+            {
+                if (road.IsStreetViewsDownloaded)
+                {
+                    gMapForm.MiniMapRoute.AddRoad(road);
+                    streetsBypassView.Rows.Add(road.Name, road.IsSignDetected ? "Да" : "Нет", false);
+                    streetsBypassRowIndexDictionary.Add(road.Name, streetsBypassView.RowCount);
+
+                }
+                else
+                {
+                    List<PolylineChunk> chunksToAdd = new List<PolylineChunk>();
+                    foreach (PolylineChunk chunk in road.PolylineChunks)
+                    {
+                        if (chunk.IsStreetViewsDownloaded)
+                        {
+                            chunksToAdd.Add(chunk);
+                        }
+                    }
+                    if (chunksToAdd.Count > 0)
+                    {
+                        streetsBypassView.Rows.Add(road.Name, road.IsSignDetected ? "Да" : "Нет", false);
+                        streetsBypassRowIndexDictionary.Add(road.Name, streetsBypassView.RowCount);
+                        gMapForm.MiniMapRoute.AddPolylineChunks(road.Name, chunksToAdd);
+                    }
+                }
+
+            }
         }
 
         private void GMap_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -201,95 +241,9 @@ namespace PathFinder.Interface
             gMapForm.MouseDoubleClick(e);
         }
 
-        private void gMapMini_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            gMapForm.MapMiniMouseDoubleClick(e);
-        }
-
         private void GMap_OnMarkerClick(GMapMarker item, MouseEventArgs e)
         {
             gMapForm.OnMarkerClick(item);
-        }
-
-        // 
-        // startStreet TextBox events
-        // 
-        private void StartStreet_MouseHover(object sender, EventArgs e)
-        {
-            toolTip1.SetToolTip(startStreet, STREET1_TOOLTIP_MESSAGE);
-        }
-
-        private void StartStreet_MouseLeave(object sender, EventArgs e)
-        {
-            toolTip1.Hide(startStreet);
-        }
-
-        private void StartStreet_KeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter && !string.IsNullOrEmpty(startStreet.Text))
-            {
-                try
-                {
-                    Location geoCode = controller.GetGeocoding(startStreet.Text);
-
-                    if (geoCode != null)
-                    {
-                        PointLatLng position = new PointLatLng(geoCode.Lat, geoCode.Lng);
-                        gMapForm.AddMarkerByKeyUp(position, true);
-                        this.streetViewsRequestButton.Enabled = false;
-                        gMapForm.CalculateZoomAndPosition();
-                    }
-                    else
-                    {
-                        resultLabel.Text = ERROR_MESSAGE;
-                    }
-                    e.Handled = true;
-                }
-                catch (WebException ex)
-                {
-                    resultLabel.Text = WEB_ERROR_MESSAGE;
-                }
-            }
-        }
-
-        //
-        // endStreet TextBox events
-        //
-        private void EndStreet_MouseHover(object sender, EventArgs e)
-        {
-            toolTip2.SetToolTip(endStreet, STREET2_TOOLTIP_MESSAGE);
-        }
-
-        private void EndStreet_MouseLeave(object sender, EventArgs e)
-        {
-            toolTip1.Hide(endStreet);
-        }
-
-        private void EndStreet_KeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter && !string.IsNullOrEmpty(endStreet.Text))
-            {
-                try
-                {
-                    Location geoCode = controller.GetGeocoding(endStreet.Text);
-                    if (geoCode != null)
-                    {
-                        PointLatLng position = new PointLatLng(geoCode.Lat, geoCode.Lng);
-                        gMapForm.AddMarkerByKeyUp(position, false);
-                        this.streetViewsRequestButton.Enabled = false;
-                        gMapForm.CalculateZoomAndPosition();
-                    }
-                    else
-                    {
-                        resultLabel.Text = ERROR_MESSAGE;
-                    }
-                    e.Handled = true;
-                }
-                catch (WebException ex)
-                {
-                    resultLabel.Text = WEB_ERROR_MESSAGE;
-                }
-            }
         }
 
         // 
@@ -303,80 +257,23 @@ namespace PathFinder.Interface
             toolTip.ShowAlways = true;
         }
 
-        private void UpdateStatus()
-        {
-            while (downloader.Status < 100)
-            {
-                SetText("Загружено " + downloader.Status + "%");
-                System.Threading.Thread.Sleep(1000);
-                List<PolylineChunk> chunks = downloader.GetDownloadedChunks();
-                gMapForm.ShiftToDbRoute(chunks);
-            }
-
-            this.SetText("Загрузка завершена");
-            downloader = null;
-            SetAvailability(streetViewsRequestButton);
-        }
-
-        private void SetText(string text)
-        {
-            if (resultLabel.InvokeRequired)
-            {
-                StringArgReturningVoidDelegate d = new StringArgReturningVoidDelegate(SetText);
-                Invoke(d, new object[] { text });
-            }
-            else
-            {
-                resultLabel.Text = text;
-            }
-        }
-
-        private void SetStreetView(Bitmap image)
-        {
-            if (streetViewBox.InvokeRequired)
-            {
-                BitmapArgReturningVoidDelegate dlgt = new BitmapArgReturningVoidDelegate(SetStreetView);
-                Invoke(dlgt, new object[] { image });
-            }
-            else
-            {
-                streetViewBox.Image = image;
-            }
-
-        }
-
-        private void SetAvailability(Button button)
-        {
-            if (button.InvokeRequired)
-            {
-                ButtonAvailabilityDelegate d = new ButtonAvailabilityDelegate(SetAvailability);
-                this.Invoke(d, new object[] { button });
-            }
-            else
-            {
-                button.Enabled = true;
-            }
-        }
-
         private void ClearButton_Click(object sender, EventArgs e)
         {
-            gMapForm.ClearAddedRoute();
+            //gMapForm.MainMapRoute.Clear();
         }
 
         private void detectorsListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            detecorsInfoListView.Items.Clear();
+            detectorsInfoListView.Rows.Clear();
             foreach (string detectorName in GetCheckedDetectorsNamesList())
             {
-                ListViewItem item = detecorsInfoListView.Items.Add(detectorName);
-                item.SubItems.Add("0");
-                item.SubItems.Add("Не найдено ни одного знака на данном изображении");
+                detectorsInfoListView.Rows.Add(detectorName, "0", "Не найдено ни одного знака на данном изображении");
 
             }
-            detecorsInfoListView.Refresh();
+            detectorsInfoListView.Refresh();
         }
 
-        private List<string> GetCheckedDetectorsNamesList()
+        internal List<string> GetCheckedDetectorsNamesList()
         {
             List<string> checkedDetectorsList = new List<string>();
             for (int i = 0; i < detectorsListBox.Items.Count; i++)
@@ -389,37 +286,74 @@ namespace PathFinder.Interface
             return checkedDetectorsList;
         }
 
-        private void detectSignsInViewsButton_Click(object sender, EventArgs e)
+        private void streetsGridView_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            try
+            if (e.RowIndex != -1)
             {
-                bypassService = controller.StartDetection(gMapForm.GetDetectorsStartChunk(), GetCheckedDetectorsNamesList());
-                Thread byPassStatusThread = new Thread(UpdateBypassResults);
-                byPassStatusThread.Start();
-                detectSignsInViewsButton.Enabled = false;
-            }
-            catch (WebException ex)
-            {
-                resultLabel.Text = WEB_ERROR_MESSAGE;
+                bool rowSelectValue = !(bool)streetsGridView.Rows[e.RowIndex].Cells[2].FormattedValue;
+                streetsGridView.Rows[e.RowIndex].Cells[2].Value = rowSelectValue;
+
+                if (rowSelectValue)
+                {
+                    gMapForm.MainMapRoute.HighlightRoadByViewsDownloadStatus(streetsGridView.Rows[e.RowIndex].Cells[0].FormattedValue.ToString());
+                }
+                else
+                {
+                    gMapForm.MainMapRoute.DeHighlightRoad(streetsGridView.Rows[e.RowIndex].Cells[0].FormattedValue.ToString());
+                }
+
+                gMapForm.RefreshGMapMain();
             }
         }
 
-        private void UpdateBypassResults()
+        private void streetsBypassView_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            while (bypassService.Status == 1)
+            if (e.RowIndex != -1)
             {
-                List<BypassResult> bypassResults = bypassService.GetBypassResults();
-                List<PolylineChunk> chunks = bypassService.GetDownloadedChunks();
-                gMapForm.ShiftToDetectedRoute(chunks);
-                foreach (BypassResult result in bypassResults)
+                bool rowSelectValue = !(bool)streetsBypassView.Rows[e.RowIndex].Cells[2].FormattedValue;
+                streetsBypassView.Rows[e.RowIndex].Cells[2].Value = rowSelectValue;
+                if (rowSelectValue)
                 {
-                    SetStreetView(result.Image);
-                    System.Threading.Thread.Sleep(1000);
+                    gMapForm.MiniMapRoute.HighlightRoadBySignDetectedStatus(streetsBypassView.Rows[e.RowIndex].Cells[0].FormattedValue.ToString());
                 }
-                System.Threading.Thread.Sleep(1000);
+                else
+                {
+                    gMapForm.MiniMapRoute.DeHighlightRoad(streetsBypassView.Rows[e.RowIndex].Cells[0].FormattedValue.ToString());
+                }
+
+                gMapForm.RefreshGMapMini();
             }
-            bypassService = null;
-            SetAvailability(detectSignsInViewsButton);
+        }
+
+        private void LoadSignsGridViewData()
+        {
+            HashSet<Sign> signs = controller.LoadSigns();
+            foreach (Sign sign in signs)
+            {
+                signsGridView.Rows.Add(sign.ClassName, sign.DetectorName);
+                signRowIndexDictionary.Add(signsGridView.RowCount, sign);
+            }
+        }
+
+        private void signsGridView_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex != -1)
+            {
+                Sign sign = signRowIndexDictionary[e.RowIndex];
+                if(signsMap.Overlays[0].Markers.Count < 1)
+                {
+                    GMapMarker marker = new GMarkerGoogle(new PointLatLng(sign.Image.Lat, sign.Image.Lng), GMarkerGoogleType.blue);
+                    marker.ToolTipText = sign.ClassName;
+                    signsMap.Overlays[0].Markers.Add(marker);
+
+                }
+                else
+                {
+                    PointLatLng position = new PointLatLng(sign.Image.Lat, sign.Image.Lng);
+                    signsMap.Overlays[0].Markers[0].Position = position;
+                    signsMap.Overlays[0].Markers[0].ToolTipText = sign.ClassName;
+                }
+            }
         }
     }
 }

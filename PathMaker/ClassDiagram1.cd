@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="PathFinder.StreetViewing.LocationEntity">
+    <Position X="10.5" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EQACAAAAACAAAAAAgAAEAAAAAgAAAAQAAAABAAAAAAA=</HashCode>
+      <FileName>StreetViewing\LocationEntity.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PathFinder.StreetViewing.PolylineChunk">
+    <Position X="7.25" Y="1.25" Width="1.5" />
+    <AssociationLine Name="PolylineChunk1" Type="PathFinder.StreetViewing.PolylineChunk" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="7.782" Y="3.767" />
+        <Point X="7.782" Y="4.682" />
+        <Point X="8.48" Y="4.682" />
+        <Point X="8.48" Y="4.069" />
+        <Point X="8.5" Y="4.069" />
+        <Point X="8.5" Y="3.767" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AlACEAAAAAAAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>StreetViewing\PolylineChunk.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="LocationEntity" />
+      <Property Name="PolylineChunk1" />
+    </ShowAsAssociation>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

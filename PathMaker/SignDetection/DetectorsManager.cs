@@ -8,10 +8,17 @@ using System.Text;
 
 namespace PathFinder.SignDetection
 {
+    /// <summary>
+    /// Класс менеджер загрузкок плагинов детектирования
+    /// </summary>
     public class DetectorsManager
     {
         private List<IDetector> detectors;
 
+        /// <summary>
+        /// Конструктор менеджера плагинов
+        /// </summary>
+        /// <param name="pluginPath">Путь к директории с плагинами</param>
         public DetectorsManager(String pluginPath)
         {
             detectors = new List<IDetector>();
@@ -29,6 +36,9 @@ namespace PathFinder.SignDetection
             }
         }
 
+        /// <summary>
+        /// Список плагинов детектирования
+        /// </summary>
         public List<IDetector> Detectors
         {
             get { return detectors; }

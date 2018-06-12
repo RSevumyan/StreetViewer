@@ -1,38 +1,47 @@
 ﻿using PathFinder.StreetViewing.JsonObjects.GoogleApiJson.Common;
+using PathFinder.StreetViewing.JsonObjects.OverpassApiJson;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
-namespace PathFinder.StreetViewing
+namespace PathFinder.DatabaseService.Model
 {
     public class LocationEntity
     {
-        public LocationEntity() { }
+        public LocationEntity()
+        {
+            ImagePacks = new HashSet<ImagePack>();
+        }
 
-        public LocationEntity(double lat, double lng)
+        public LocationEntity(double lat, double lng) : this()
         {
             Lat = lat;
             Lng = lng;
         }
 
-        public LocationEntity(Location location)
+        public LocationEntity(Element element) : this()
+        {
+            OverpassId = element.Id;
+            Lat = element.Lat;
+            Lng = element.Lon;
+        }
+
+        public LocationEntity(Location location) : this()
         {
             Lat = location.Lat;
             Lng = location.Lng;
         }
 
-        public long Id { get; set; }
+        public int Id { get; set; }
+
+        public long OverpassId { get; set; }
 
         public double Lat { get; set; }
 
         public double Lng { get; set; }
 
-        public string PathToStreetView { get; set; }
+        public virtual HashSet<PolylineChunk> PolylineChunks { get; set; }
 
-        [ForeignKey("PolylineChunk")]
-        public int PolylineChunkId { get; set; }
-
-        public virtual PolylineChunk PolylineChunk { get; set; }
+        public virtual HashSet<ImagePack> ImagePacks { get; set; }
 
         public Location GetGoogleLocation()
         {
