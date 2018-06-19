@@ -39,7 +39,7 @@ namespace PathFinder.Interface
 
             //Preparing overlay for routes from database
             GMapOverlay historyOverlay = new GMapOverlay("HistoryOverlay");
-            mainMapRoute = new EmbededRoute(historyOverlay, Color.DarkBlue);
+            mainMapRoute = new EmbededRoute(historyOverlay, Color.Blue, Color.Orange, "MainRoute");
             gMap.Overlays.Add(historyOverlay);
 
             //Preparing overlay for current session routes
@@ -55,7 +55,7 @@ namespace PathFinder.Interface
 
             GMapOverlay gmapMiniOverlay = new GMapOverlay("GmapMiniOverlay");
             mapMiniMarkers = gmapMiniOverlay.Markers;
-            miniMapRoute = new EmbededRoute(gmapMiniOverlay, Color.Green);
+            miniMapRoute = new EmbededRoute(gmapMiniOverlay, Color.Green, Color.Orange, "MiniRoute");
             gMapMini.Overlays.Add(gmapMiniOverlay);
             
         }

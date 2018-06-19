@@ -11,17 +11,21 @@ namespace PathFinder.Interface
 {
     internal class EmbededRoute
     {
-        private Color color;
+        private Color color1;
+        private Color color2;
+        string routeType;
         private GMapOverlay overlay;
         Dictionary<string, HashSet<long>> roadDictionary;
         Dictionary<long, GMapRoute> chunkDictionary;
 
-        internal EmbededRoute(GMapOverlay overlay, Color color)
+        internal EmbededRoute(GMapOverlay overlay, Color color1, Color color2, string routeType)
         {
             this.overlay = overlay;
             roadDictionary = new Dictionary<string, HashSet<long>>();
             chunkDictionary = new Dictionary<long, GMapRoute>();
-            this.color = color;
+            this.color1 = color1;
+            this.color2 = color2;
+            this.routeType = routeType;
         }
 
         internal List<long> GetChunksIds()
@@ -90,7 +94,18 @@ namespace PathFinder.Interface
         internal GMapRoute GetRouteForChunk(PolylineChunk chunk)
         {
             GMapRoute route = new GMapRoute(chunk.OverpassId.ToString());
-            route.Stroke = new Pen(color, 2);
+            if("MainRoute".Equals(routeType) && chunk.IsStreetViewsDownloaded)
+            {
+                route.Stroke = new Pen(color2, 2);
+            }
+            else if ("MiniRoute".Equals(routeType) && chunk.IsSignDetected)
+            {
+                route.Stroke = new Pen(color2, 2);
+            }
+            else
+            {
+                route.Stroke = new Pen(color1, 2);
+            }
             route.Points.AddRange(GetListOfPoinLatLng(chunk.OrderedLocationEntities.OrderBy(i => i.Order).Select(x => x.LocationEntity).ToList()));
             return route;
         }
@@ -137,16 +152,18 @@ namespace PathFinder.Interface
             }
         }
 
-        internal void DeHighlightRoad(string name)
+        internal void DeHighlightRoad(string name, bool completed)
         {
+            Color color = completed ? color2 : color1;
             foreach (long id in roadDictionary[name])
             {
                 chunkDictionary[id].Stroke.Color = color;
             }
         }
 
-        internal void DeHighlightPolylineChunk(long chunkOverpassId)
+        internal void DeHighlightPolylineChunk(long chunkOverpassId, bool completed)
         {
+            Color color = completed ? color2 : color1;
             chunkDictionary[chunkOverpassId].Stroke.Color = color;
         }
 

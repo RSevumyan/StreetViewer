@@ -42,11 +42,11 @@ namespace PathFinder.Interface
                     {
                         if (chunk.IsStreetViewsDownloaded)
                         {
-                            mainForm.GMapForm.MainMapRoute.DeHighlightPolylineChunk(chunk.OverpassId);
+                            mainForm.GMapForm.MainMapRoute.DeHighlightPolylineChunk(chunk.OverpassId, true);
                         }
                     }
                 }
-                downloader = controller.GetStreetViews(streets, AppDomain.CurrentDomain.BaseDirectory + "Chunks");
+                downloader = controller.GetStreetViews(streets, "Data\\Chunks");
 
                 Thread roadLoadStatusThread = new Thread(UpdateStatus);
                 roadLoadStatusThread.Start();
@@ -66,7 +66,7 @@ namespace PathFinder.Interface
                 List<PolylineChunk> chunks = downloader.GetDownloadedChunks();
                 foreach (long overpassId in chunks.Select(ch => ch.OverpassId))
                 {
-                    mainForm.GMapForm.MainMapRoute.DeHighlightPolylineChunk(overpassId);
+                    mainForm.GMapForm.MainMapRoute.DeHighlightPolylineChunk(overpassId, true);
                 }
                 UpdateRoadsStatus();
             }
@@ -82,20 +82,19 @@ namespace PathFinder.Interface
             List<Road> downloadedRoads = downloader.GetDownloadedRoads();
             foreach (Road road in downloadedRoads)
             {
-                if (mainForm.StreetViewsRowIndexDictionary.ContainsKey(road.Name))
+                int rowIndex = mainForm.FindRowByStreetName(mainForm.StreetsGridView, road.Name);
+                if (rowIndex != -1)
                 {
-                    int rowIndex = mainForm.StreetViewsRowIndexDictionary[road.Name];
                     ConcurrencyUtils.SetCellValue(mainForm.StreetsGridView, rowIndex, 1, "Да");
                     ConcurrencyUtils.SetCellValue(mainForm.StreetsGridView, rowIndex, 2, false);
-                    if (mainForm.StreetsBypassRowIndexDictionary.ContainsKey(road.Name))
+                    rowIndex = mainForm.FindRowByStreetName(mainForm.StreetsBypassView, road.Name);
+                    if (rowIndex != -1)
                     {
-                        rowIndex = mainForm.StreetsBypassRowIndexDictionary[road.Name];
                         ConcurrencyUtils.SetCellValue(mainForm.StreetsBypassView, rowIndex, 1, "Нет");
                     }
                     else
                     {
                         ConcurrencyUtils.AddRow(mainForm.StreetsBypassView, new object[] { road.Name, road.IsSignDetected ? "Да" : "Нет", false });
-                        mainForm.StreetsBypassRowIndexDictionary.Add(road.Name, mainForm.StreetsBypassView.RowCount - 1);
                     }
                     mainForm.GMapForm.MiniMapRoute.AddRoad(road);
                 }

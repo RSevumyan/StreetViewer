@@ -14,6 +14,7 @@ using PathFinder.DatabaseService.Model;
 using GMap.NET.MapProviders;
 using GMap.NET;
 using GMap.NET.WindowsForms.Markers;
+using System.Drawing;
 
 namespace PathFinder.Interface
 {
@@ -27,13 +28,10 @@ namespace PathFinder.Interface
         private const string RESULTLABEL_STREETVIEWS_SUCCESS = "Панорамы успешно загружены";
 
         private Controller controller;
-        private SignDetectionProcessor bypassService;
         private GMapForm gMapForm;
         private Parameters parameters;
 
-        private Dictionary<string, int> streetsViewRowIndexDictionary;
-        private Dictionary<string, int> streetsBypassRowIndexDictionary;
-        private Dictionary<int, Sign> signRowIndexDictionary;
+        private Dictionary<int, Sign> signsRowIndexDictionary;
 
         /// <summary>
         /// Стандартный конструктор.
@@ -49,22 +47,8 @@ namespace PathFinder.Interface
             orderInput.Value = parameters.Order;
             radiusUpDown.Value = parameters.Radius;
             pluginPathTextBox.Text = parameters.PluginsPath;
-            streetsViewRowIndexDictionary = new Dictionary<string, int>();
-            streetsBypassRowIndexDictionary = new Dictionary<string, int>();
-            signRowIndexDictionary = new Dictionary<int, Sign>();
-            LoadData();
-        }
-
-        private void LoadData()
-        {
-            signsMap.MapProvider = GoogleMapProvider.Instance;
-            GMaps.Instance.Mode = AccessMode.ServerOnly;
-            signsMap.SetPositionByKeywords("Moscow, Russia");
-            signsMap.ShowCenter = false;
-            signsMap.DragButton = MouseButtons.Left;
-            GMapOverlay currentOverlay = new GMapOverlay("SignsMap Overlay");
-            signsMap.Overlays.Add(currentOverlay);
-            LoadSignsGridViewData();
+            signsRowIndexDictionary = new Dictionary<int, Sign>();
+            LoadMapData();
         }
 
         internal Button AllDirectionButton { get { return allDirectionsButton; } }
@@ -85,13 +69,23 @@ namespace PathFinder.Interface
 
         internal DataGridView SignsGridView { get { return signsGridView; } }
 
-        internal Dictionary<string, int> StreetViewsRowIndexDictionary { get { return streetsViewRowIndexDictionary; } }
-
-        internal Dictionary<string, int> StreetsBypassRowIndexDictionary { get { return streetsBypassRowIndexDictionary; } }
-
-        internal Dictionary<int, Sign> SignRowIndexDictionary { get { return signRowIndexDictionary; } }
+        internal Dictionary<int, Sign> SignsRowIndexDictionary { get { return signsRowIndexDictionary; } }
 
         internal PictureBox StreetViewBox { get { return streetViewBox; } }
+
+        internal int FindRowByStreetName(DataGridView dataGrid, string roadName)
+        {
+            int rowIndex = -1;
+            foreach (DataGridViewRow row in dataGrid.Rows)
+            {
+                if (roadName.Equals(row.Cells[0].Value))
+                {
+                    rowIndex = row.Index;
+                    break;
+                }
+            }
+            return rowIndex;
+        }
 
         // ==============================================================================================================
         // = Implementation
@@ -178,62 +172,66 @@ namespace PathFinder.Interface
             }
         }
 
-        // 
-        // gMap events
-        // 
-        private void GMap_Load(object sender, EventArgs e)
+        private void LoadMapData()
         {
-            if (gMapForm == null)
+            LoadMainAndMiniMapData();
+            LoadSignMapData();
+        }
+
+        private void LoadMainAndMiniMapData()
+        {
+            gMapForm = new GMapForm(gMap, gMapMini);
+            controller.LoadGeoData();
+            GeographiData geoData = GeographiData.Instance;
+            foreach (Road road in geoData.Roads.Values)
             {
-                gMapForm = new GMapForm(gMap, gMapMini);
-                controller.LoadGeoData();
-                GeographiData geoData = GeographiData.Instance;
-                foreach (Road road in geoData.Roads.Values)
+                LoadMainMapRoad(road);
+                LoadMiniMapRoad(road);
+            }
+        }
+
+        private void LoadMainMapRoad(Road road)
+        {
+            gMapForm.MainMapRoute.AddRoad(road);
+            streetsGridView.Rows.Add(road.Name, road.IsStreetViewsDownloaded ? "Да" : "Нет", false);
+        }
+
+        private void LoadMiniMapRoad(Road road)
+        {
+            if (road.IsStreetViewsDownloaded)
+            {
+                gMapForm.MiniMapRoute.AddRoad(road);
+                streetsBypassView.Rows.Add(road.Name, road.IsSignDetected ? "Да" : "Нет", false);
+
+            }
+            else
+            {
+                List<PolylineChunk> chunksToAdd = new List<PolylineChunk>();
+                foreach (PolylineChunk chunk in road.PolylineChunks)
                 {
-                    gMapForm.MainMapRoute.AddRoad(road);
-                    streetsViewRowIndexDictionary.Add(road.Name, streetsGridView.RowCount);
-                    streetsGridView.Rows.Add(road.Name, road.IsStreetViewsDownloaded ? "Да" : "Нет", false);
+                    if (chunk.IsStreetViewsDownloaded)
+                    {
+                        chunksToAdd.Add(chunk);
+                    }
+                }
+                if (chunksToAdd.Count > 0)
+                {
+                    streetsBypassView.Rows.Add(road.Name, road.IsSignDetected ? "Да" : "Нет", false);
+                    gMapForm.MiniMapRoute.AddPolylineChunks(road.Name, chunksToAdd);
                 }
             }
         }
 
-        private void gMapMini_Load(object sender, EventArgs e)
+        private void LoadSignMapData()
         {
-            if (gMapForm == null)
-            {
-                gMapForm = new GMapForm(gMap, gMapMini);
-                controller.LoadGeoData();
-            }
-
-            GeographiData geoData = GeographiData.Instance;
-            foreach (Road road in geoData.Roads.Values)
-            {
-                if (road.IsStreetViewsDownloaded)
-                {
-                    gMapForm.MiniMapRoute.AddRoad(road);
-                    streetsBypassView.Rows.Add(road.Name, road.IsSignDetected ? "Да" : "Нет", false);
-                    streetsBypassRowIndexDictionary.Add(road.Name, streetsBypassView.RowCount);
-
-                }
-                else
-                {
-                    List<PolylineChunk> chunksToAdd = new List<PolylineChunk>();
-                    foreach (PolylineChunk chunk in road.PolylineChunks)
-                    {
-                        if (chunk.IsStreetViewsDownloaded)
-                        {
-                            chunksToAdd.Add(chunk);
-                        }
-                    }
-                    if (chunksToAdd.Count > 0)
-                    {
-                        streetsBypassView.Rows.Add(road.Name, road.IsSignDetected ? "Да" : "Нет", false);
-                        streetsBypassRowIndexDictionary.Add(road.Name, streetsBypassView.RowCount);
-                        gMapForm.MiniMapRoute.AddPolylineChunks(road.Name, chunksToAdd);
-                    }
-                }
-
-            }
+            signsMap.MapProvider = GoogleMapProvider.Instance;
+            GMaps.Instance.Mode = AccessMode.ServerOnly;
+            signsMap.SetPositionByKeywords("Moscow, Russia");
+            signsMap.ShowCenter = false;
+            signsMap.DragButton = MouseButtons.Left;
+            GMapOverlay currentOverlay = new GMapOverlay("SignsMap Overlay");
+            signsMap.Overlays.Add(currentOverlay);
+            LoadSignsGridViewData();
         }
 
         private void GMap_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -292,14 +290,14 @@ namespace PathFinder.Interface
             {
                 bool rowSelectValue = !(bool)streetsGridView.Rows[e.RowIndex].Cells[2].FormattedValue;
                 streetsGridView.Rows[e.RowIndex].Cells[2].Value = rowSelectValue;
-
+                bool completed = "Да".Equals(streetsGridView.Rows[e.RowIndex].Cells[1].Value);
                 if (rowSelectValue)
                 {
                     gMapForm.MainMapRoute.HighlightRoadByViewsDownloadStatus(streetsGridView.Rows[e.RowIndex].Cells[0].FormattedValue.ToString());
                 }
                 else
                 {
-                    gMapForm.MainMapRoute.DeHighlightRoad(streetsGridView.Rows[e.RowIndex].Cells[0].FormattedValue.ToString());
+                    gMapForm.MainMapRoute.DeHighlightRoad(streetsGridView.Rows[e.RowIndex].Cells[0].FormattedValue.ToString(), completed);
                 }
 
                 gMapForm.RefreshGMapMain();
@@ -312,13 +310,14 @@ namespace PathFinder.Interface
             {
                 bool rowSelectValue = !(bool)streetsBypassView.Rows[e.RowIndex].Cells[2].FormattedValue;
                 streetsBypassView.Rows[e.RowIndex].Cells[2].Value = rowSelectValue;
+                bool completed = "Да".Equals(streetsBypassView.Rows[e.RowIndex].Cells[1].Value);
                 if (rowSelectValue)
                 {
                     gMapForm.MiniMapRoute.HighlightRoadBySignDetectedStatus(streetsBypassView.Rows[e.RowIndex].Cells[0].FormattedValue.ToString());
                 }
                 else
                 {
-                    gMapForm.MiniMapRoute.DeHighlightRoad(streetsBypassView.Rows[e.RowIndex].Cells[0].FormattedValue.ToString());
+                    gMapForm.MiniMapRoute.DeHighlightRoad(streetsBypassView.Rows[e.RowIndex].Cells[0].FormattedValue.ToString(), completed);
                 }
 
                 gMapForm.RefreshGMapMini();
@@ -327,20 +326,21 @@ namespace PathFinder.Interface
 
         private void LoadSignsGridViewData()
         {
-            HashSet<Sign> signs = controller.LoadSigns();
+            List<Sign> signs = controller.LoadSigns();
             foreach (Sign sign in signs)
             {
                 signsGridView.Rows.Add(sign.ClassName, sign.DetectorName);
-                signRowIndexDictionary.Add(signsGridView.RowCount, sign);
+                signsRowIndexDictionary.Add(signsGridView.RowCount, sign);
             }
         }
 
         private void signsGridView_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex != -1)
+            int index = e.RowIndex + 1;
+            if (index != -1 && signsRowIndexDictionary.ContainsKey(index))
             {
-                Sign sign = signRowIndexDictionary[e.RowIndex];
-                if(signsMap.Overlays[0].Markers.Count < 1)
+                Sign sign = signsRowIndexDictionary[index];
+                if (signsMap.Overlays[0].Markers.Count < 1)
                 {
                     GMapMarker marker = new GMarkerGoogle(new PointLatLng(sign.Image.Lat, sign.Image.Lng), GMarkerGoogleType.blue);
                     marker.ToolTipText = sign.ClassName;
@@ -353,6 +353,13 @@ namespace PathFinder.Interface
                     signsMap.Overlays[0].Markers[0].Position = position;
                     signsMap.Overlays[0].Markers[0].ToolTipText = sign.ClassName;
                 }
+                Bitmap img = new Bitmap(sign.Image.Path);
+
+                using (Graphics newGraphics = Graphics.FromImage(img))
+                {
+                    newGraphics.FillRectangle(new SolidBrush(Color.FromArgb(50, Color.Red)), new Rectangle(sign.X, sign.Y, sign.Width, sign.Height));
+                }
+                signsPictureBox.Image = img;
             }
         }
     }

@@ -11,6 +11,7 @@ using PathFinder.SignDetection;
 using PathFinder.DataBaseService;
 using CommonDetectorApi;
 using PathFinder.DatabaseService.Model;
+using System;
 
 namespace PathFinder.Core
 {
@@ -154,8 +155,6 @@ namespace PathFinder.Core
         {
             Dictionary<string, Road> roadsDictionary = new Dictionary<string, Road>();
             roadsDictionary = geoService.GetRoadsDictionaryFromGeoJson(geoJson);
-            //dbContext.Roads.AddRange(roadsDictionary.Values);
-            //dbContext.SaveChanges();
 
             foreach(Road road in roadsDictionary.Values)
             {
@@ -209,10 +208,13 @@ namespace PathFinder.Core
             detectorsManager = new DetectorsManager(parameters.PluginsPath);
         }
 
-        public HashSet<DatabaseService.Model.Sign> LoadSigns()
+        public List<DatabaseService.Model.Sign> LoadSigns()
         {
-            HashSet<DatabaseService.Model.Sign> signsSet = new HashSet<DatabaseService.Model.Sign>();
-            signsSet.Union(dbContext.Signs);
+            List<DatabaseService.Model.Sign> signsSet = new List<DatabaseService.Model.Sign>();
+            //dbContext.Images;
+            List<StreetView> views = new List<StreetView>();
+            views.AddRange(dbContext.Images);
+            signsSet.AddRange(dbContext.Signs);
             return signsSet;
         }
     }

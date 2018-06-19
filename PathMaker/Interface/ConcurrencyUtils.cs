@@ -52,15 +52,6 @@ namespace PathFinder.Interface
             else
             {
                 pictureBox.Image = image;  
-                /*
-                private void SetImage(Bitmap bmp)
-                {
-                    streetViewBox.Image = bmp;
-                    streetViewBox.Invalidate();
-                    if (curBitmap != null)
-                        curBitmap.Dispose();
-                    curBitmap = bmp;
-                }*/
             }
         }
 

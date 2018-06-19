@@ -115,6 +115,7 @@
     <Compile Include="DatabaseService\Model\Image.cs" />
     <Compile Include="DatabaseService\Model\ImagePack.cs" />
     <Compile Include="DatabaseService\Model\OrderedLocationEntity.cs" />
+    <Compile Include="DatabaseService\Model\OrderedPolylineChunk.cs" />
     <Compile Include="DatabaseService\Model\Sign.cs" />
     <Compile Include="DatabaseService\PathFinderContext.cs" />
     <Compile Include="Interface\AbstractConcurrentProcess.cs" />

@@ -9,6 +9,7 @@ namespace PathFinder.DatabaseService.Model
         {
             OrderedLocationEntities = new List<OrderedLocationEntity>();
             IsStreetViewsDownloaded = false;
+            IsSignDetected = false;
         }
 
         public PolylineChunk(List<OrderedLocationEntity> locationList) : this()
@@ -27,6 +28,7 @@ namespace PathFinder.DatabaseService.Model
         public bool IsStreetViewsDownloaded { get; set; }
 
         public bool IsSignDetected { get; set; }
+        public int Order { get; set; }
 
         public bool Equals(PolylineChunk obj)
         {

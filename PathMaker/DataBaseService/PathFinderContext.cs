@@ -1,11 +1,18 @@
 ﻿using System.Data.Entity;
 using PathFinder.DatabaseService.Model;
 using System.Data.Entity.Infrastructure;
+using System;
+using System.IO;
 
 namespace PathFinder.DataBaseService
 {
     public class PathFinderContext : DbContext
     {
+
+        public PathFinderContext() : base()
+        {
+            AppDomain.CurrentDomain.SetData("DataDirectory", System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data"));
+        }
         public DbSet<Road> Roads { get; set; }
 
         public DbSet<PolylineChunk> Chunks { get; set; }

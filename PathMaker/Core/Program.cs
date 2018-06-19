@@ -16,6 +16,10 @@ namespace PathFinder.Core
         static void Main()
         {
             Application.EnableVisualStyles();
+            System.IO.Directory.CreateDirectory("Data");
+            System.IO.Directory.CreateDirectory("Data\\Database");
+            System.IO.Directory.CreateDirectory("Data\\Chunks");
+            System.IO.Directory.CreateDirectory("plugins");
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm());
         }

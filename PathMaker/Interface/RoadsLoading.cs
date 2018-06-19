@@ -40,16 +40,14 @@ namespace PathFinder.Interface
             foreach (Road road in LoadedRoades.Values)
             {
                 mainForm.GMapForm.MainMapRoute.AddRoad(road);
-
-                if (mainForm.StreetViewsRowIndexDictionary.ContainsKey(road.Name))
+                int rowIndex = mainForm.FindRowByStreetName(mainForm.StreetsGridView, road.Name);
+                if (rowIndex != -1)
                 {
-                    int rowIndex = mainForm.StreetViewsRowIndexDictionary[road.Name];
                     ConcurrencyUtils.SetCellValue(mainForm.StreetsGridView, rowIndex, 1, "Нет");
                 }
                 else
                 {
                     ConcurrencyUtils.AddRow(mainForm.StreetsGridView, new object[] { road.Name, road.IsStreetViewsDownloaded ? "Да" : "Нет", false });
-                    mainForm.StreetViewsRowIndexDictionary.Add(road.Name, mainForm.StreetsGridView.RowCount - 1);
                 }
             }
             isLoadComplete = true;

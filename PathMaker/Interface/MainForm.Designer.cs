@@ -132,7 +132,6 @@ namespace PathFinder.Interface
             this.gMap.TabIndex = 8;
             this.gMap.Zoom = 10D;
             this.gMap.OnMarkerClick += new GMap.NET.WindowsForms.MarkerClick(this.GMap_OnMarkerClick);
-            this.gMap.Load += new System.EventHandler(this.GMap_Load);
             this.gMap.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.GMap_MouseDoubleClick);
             // 
             // streetViewsRequestButton
@@ -362,7 +361,6 @@ namespace PathFinder.Interface
             this.gMapMini.Size = new System.Drawing.Size(467, 512);
             this.gMapMini.TabIndex = 9;
             this.gMapMini.Zoom = 10D;
-            this.gMapMini.Load += new System.EventHandler(this.gMapMini_Load);
             // 
             // detectorsStatisticLabel
             // 
@@ -467,7 +465,7 @@ namespace PathFinder.Interface
             this.signsTabPage.Padding = new System.Windows.Forms.Padding(3);
             this.signsTabPage.Size = new System.Drawing.Size(1198, 749);
             this.signsTabPage.TabIndex = 3;
-            this.signsTabPage.Text = "Знкаи";
+            this.signsTabPage.Text = "Знаки";
             this.signsTabPage.UseVisualStyleBackColor = true;
             // 
             // signsLayout

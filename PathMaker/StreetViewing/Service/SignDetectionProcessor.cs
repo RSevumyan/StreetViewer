@@ -3,6 +3,7 @@ using PathFinder.DatabaseService.Model;
 using PathFinder.DataBaseService;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 
 namespace PathFinder.StreetViewing.Service
 {
@@ -78,7 +79,7 @@ namespace PathFinder.StreetViewing.Service
             return chunksToReturn;
         }
 
-        public List<string> GedProcessedRoadsNames()
+        public List<string> GetProcessedRoadsNames()
         {
             List<string> roadsNamesToReturn = new List<string>();
             lock (processedRoadsNames)
@@ -102,18 +103,29 @@ namespace PathFinder.StreetViewing.Service
                 Road road = geoData.Roads[roadName];
                 if (!road.IsSignDetected)
                 {
-                    foreach (PolylineChunk chunk in road.PolylineChunks)
+                    List<PolylineChunk> orderedPolylineChunk = road.PolylineChunks.OrderBy(x => x.Order).ToList();
+                    for (int i = 0; i < orderedPolylineChunk.Count; i++)
                     {
-                        if (!chunk.IsSignDetected)
+                        if (!orderedPolylineChunk[i].IsSignDetected)
                         {
-                            DetectSignForChunk(chunk);
+                            DetectSignForChunk(orderedPolylineChunk[i]);
                         }
+                    }
+                    for (int i = orderedPolylineChunk.Count -1 ; i >=0; i--)
+                    {
+                        if (!orderedPolylineChunk[i].IsSignDetected)
+                        {
+                            DetectSignForChunk(orderedPolylineChunk[i]);
+                        }
+                        orderedPolylineChunk[i].IsSignDetected = true;
+                        dbContext.SaveChanges();
                     }
                     road.IsSignDetected = true;
                     dbContext.SaveChanges();
                 }
+                AddProcessedRoadName(roadName);
                 count++;
-                Status = count / roadNames.Count; 
+                Status = count / roadNames.Count;
             }
         }
 
@@ -129,15 +141,23 @@ namespace PathFinder.StreetViewing.Service
                 {
                     DetectSignForImagePack(packToProcess);
                 }
+            }
+            AddChunkToProcessedList(chunk);
+        }
 
-                packToProcess = GetImagePack(end, start);
+        private void DetectSignForChunkInversed(PolylineChunk chunk)
+        {
+            for (int i = 0; i < chunk.OrderedLocationEntities.Count - 1; i++)
+            {
+                LocationEntity start = chunk.OrderedLocationEntities.Find(x => x.Order == i).LocationEntity;
+                LocationEntity end = chunk.OrderedLocationEntities.Find(x => x.Order == i + 1).LocationEntity;
+                ImagePack packToProcess = GetImagePack(end, start);
+
                 if (packToProcess != null)
                 {
                     DetectSignForImagePack(packToProcess);
                 }
             }
-            chunk.IsSignDetected = true;
-            dbContext.SaveChanges();
             AddChunkToProcessedList(chunk);
         }
 
@@ -168,7 +188,7 @@ namespace PathFinder.StreetViewing.Service
 
             SignDetectionResult detectionResult = new SignDetectionResult();
             detectionResult.Image = image;
-            Color[] colorArray = new Color[] { Color.Green, Color.Blue, Color.Red, Color.Yellow, Color.Cyan, Color.Brown };
+            Color[] colorArray = new Color[] { Color.Red, Color.Green, Color.Blue, Color.Yellow, Color.Cyan, Color.Brown };
             using (Graphics newGraphics = Graphics.FromImage(image))
             {
                 for (int j = 0; j < detectors.Count; j++)
@@ -199,7 +219,7 @@ namespace PathFinder.StreetViewing.Service
             }
         }
 
-        private void AddSignDetectedResult(SignDetectionResult signDetectionResult) 
+        private void AddSignDetectedResult(SignDetectionResult signDetectionResult)
         {
             lock (signDetectionResult)
             {

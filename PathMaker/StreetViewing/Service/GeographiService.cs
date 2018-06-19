@@ -186,6 +186,15 @@ namespace PathFinder.StreetViewing.Service
                     geoData.Roads.Add(road.Name, road);
                 }
             }
+
+            foreach (Road road in roads.Values)
+            {
+                int chunkCount = road.PolylineChunks.Count;
+                for (int i = 0; i < chunkCount; i++)
+                {
+                    road.PolylineChunks[i].Order = i;
+                }
+            }
             return roads;
         }
 

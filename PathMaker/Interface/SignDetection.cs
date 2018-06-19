@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using PathFinder.Core;
 using PathFinder.StreetViewing.Service;
 using System.Windows.Forms;
@@ -43,7 +40,7 @@ namespace PathFinder.Interface
                     {
                         if (chunk.IsSignDetected)
                         {
-                            mainForm.GMapForm.MiniMapRoute.DeHighlightPolylineChunk(chunk.OverpassId);
+                            mainForm.GMapForm.MiniMapRoute.DeHighlightPolylineChunk(chunk.OverpassId, true);
                         }
                     }
 
@@ -53,6 +50,10 @@ namespace PathFinder.Interface
                         processor = controller.StartDetection(streets, selectedDetectorsNames);
                         Thread byPassStatusThread = new Thread(UpdateStatus);
                         byPassStatusThread.Start();
+                    }
+                    else
+                    {
+                        ConcurrencyUtils.SetAvailability(mainForm.DetectSignsInViewsButton, true);
                     }
                 }
             }
@@ -65,7 +66,7 @@ namespace PathFinder.Interface
                 UpdateMiniMap();
                 UpdateRoadsStatus();
                 UpdateStreetViewBox();
-                Thread.Sleep(1000);
+                Thread.Sleep(500);
             }
             UpdateMiniMap();
             UpdateRoadsStatus();
@@ -78,7 +79,7 @@ namespace PathFinder.Interface
             List<PolylineChunk> chunks = processor.GetDownloadedChunks();
             foreach (long overpassId in chunks.Select(ch => ch.OverpassId))
             {
-                mainForm.GMapForm.MiniMapRoute.DeHighlightPolylineChunk(overpassId);
+                mainForm.GMapForm.MiniMapRoute.DeHighlightPolylineChunk(overpassId, true);
             }
             mainForm.GMapForm.RefreshGMapMini();
         }
@@ -94,7 +95,7 @@ namespace PathFinder.Interface
                     foreach (Sign sign in detectorsResult.Value)
                     {
                         ConcurrencyUtils.AddRow(mainForm.SignsGridView, new object[] { sign.ClassName, sign.DetectorName });
-                        mainForm.SignRowIndexDictionary.Add(mainForm.SignsGridView.RowCount, sign);
+                        mainForm.SignsRowIndexDictionary.Add(mainForm.SignsGridView.RowCount, sign);
                     }
                 }
 
@@ -105,14 +106,14 @@ namespace PathFinder.Interface
 
         private void UpdateRoadsStatus()
         {
-            List<string> processedRoads = processor.GedProcessedRoadsNames();
+            List<string> processedRoads = processor.GetProcessedRoadsNames();
             foreach (string roadName in processedRoads)
             {
-                if (mainForm.StreetsBypassRowIndexDictionary.ContainsKey(roadName))
+                int rowIndex = mainForm.FindRowByStreetName(mainForm.StreetsBypassView, roadName);
+                if (rowIndex != -1)
                 {
-                    int rowIndex = mainForm.StreetsBypassRowIndexDictionary[roadName];
-                    ConcurrencyUtils.SetCellValue(mainForm.StreetsGridView, rowIndex, 1, "Да");
-                    ConcurrencyUtils.SetCellValue(mainForm.StreetsGridView, rowIndex, 2, false);
+                    ConcurrencyUtils.SetCellValue(mainForm.StreetsBypassView, rowIndex, 1, "Да");
+                    ConcurrencyUtils.SetCellValue(mainForm.StreetsBypassView, rowIndex, 2, false);
                 }
             }
         }
